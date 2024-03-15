@@ -1,0 +1,27 @@
+** STM32G4 Project Templates
+Some basic project templates which are intended for the arm-none-eabi-gcc
+toolchain. Does include support for unit tests if you wish to use them.
+Otherwise remove the relevant dirs if you decide against testing. Look at
+other branches for different setups e.g. FreeRTOS support, CMSIS support
+instead of Libopencm3 etc.
+
+The project itself is blinking the user LED on the STM32G431KB Nucleo
+device.
+*** Tools
+The following tools are needed to build this project
+- make
+- [[https://developer.arm.com/downloads/-/gnu-rm][arm-none-eabi-gcc]]
+- [[https://gcc.gnu.org/][gcc]] (for unit tests)
+- [[https://github.com/stlink-org/stlink][st-flash]] in order to interact with the STM32
+*** Submodules
+Depends on which branch you are on but here is the full list
+- [[https://libopencm3.org/][libopencm3]] or [[https://www.arm.com/technologies/cmsis][CMSIS]]
+- [[https://github.com/silentbicycle/greatest][Greatest]] C test framework
+- [[https://www.freertos.org/][FreeRTOS]]
+
+Note: Libopencm3 is LGPLv3 licensed
+
+CMSIS will also produce linker warnings due to newlib e.g. "_write is not implemented and will
+always fail". Another linker warning will appear too: elf has a LOAD segment with RWX permissions.
+There is quite a bit of a size overhead when pulling in all the CMSIS modules. An average project
+would be around ~100Mb.
