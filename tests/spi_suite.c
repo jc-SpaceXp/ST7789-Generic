@@ -5,7 +5,7 @@
 
 #include "spi.h"
 
-TEST test_write_spi_gpio_pin_high(void)
+TEST test_write_spi_gpio_pin_0_high(void)
 {
 	uint32_t pin_output = 0;
 	unsigned int pin = 0;
@@ -14,7 +14,7 @@ TEST test_write_spi_gpio_pin_high(void)
 	PASS();
 }
 
-TEST test_write_spi_gpio_pin_low(void)
+TEST test_write_spi_gpio_pin_0_low(void)
 {
 	uint32_t pin_output = 0xFFFFFFFF;
 	unsigned int pin = 0; // vals 0-15
@@ -25,7 +25,7 @@ TEST test_write_spi_gpio_pin_low(void)
 
 SUITE(spi_driver)
 {
-	RUN_TEST(test_write_spi_gpio_pin_high);
-	RUN_TEST(test_write_spi_gpio_pin_low);
+	RUN_TEST(test_write_spi_gpio_pin_0_high);
+	RUN_TEST(test_write_spi_gpio_pin_0_low);
 }
 
