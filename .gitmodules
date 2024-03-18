@@ -13,3 +13,6 @@
 [submodule "lib/cmsis/CMSIS_6"]
 	path = lib/cmsis/CMSIS_6
 	url = https://github.com/ARM-software/CMSIS_6
+[submodule "lib/fff"]
+	path = lib/fff
+	url = https://github.com/meekrosoft/fff
