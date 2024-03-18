@@ -12,12 +12,11 @@ void timer_setup(void)
 	TIM2->ARR = 0;
 }
 
-// 5-9 us for RST delay (HW reset)
-// Display is then blanked for 120ms
+// us delay needed for HW reset of ST7789 display
 void stm32_delay_us(unsigned int hclk_clock_divider)
 {
 	unsigned int delay_count = 15; // for a 1 us delay (minimum)
-	delay_count = 15 * hclk_clock_divider; // for a 1 us delay (minimum)
+	delay_count = 15 * hclk_clock_divider;
 
 	TIM2->CNT = delay_count;
 	TIM2->PSC = 0;
