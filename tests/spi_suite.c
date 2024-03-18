@@ -5,30 +5,34 @@
 
 #include "spi.h"
 
+static uint32_t some_gpio_port = 0xFFFFFFFF;
+
 TEST test_write_spi_gpio_pin_0_high(void)
 {
-	uint32_t pin_output = 0;
+	some_gpio_port = 0;
 	unsigned int pin = 0;
-	assert_spi_pin(&pin_output, pin);
-	ASSERT_EQ(pin_output, 1);
+	assert_spi_pin(&some_gpio_port, pin);
+	ASSERT_EQ(some_gpio_port, 1);
 	PASS();
 }
 
 TEST test_write_spi_gpio_pin_0_low(void)
 {
-	uint32_t pin_output = 0xFFFFFFFF;
+	uint32_t initial_val = 0xFFFFFFFF;
+	some_gpio_port = initial_val;
 	unsigned int pin = 0; // vals 0-15
-	deassert_spi_pin(&pin_output, pin);
-	ASSERT_EQ(pin_output, 0xFFFFFFFE);
+	deassert_spi_pin(&some_gpio_port, pin);
+	ASSERT_EQ(some_gpio_port, initial_val & ~(1 << pin));
 	PASS();
 }
 
 TEST test_write_spi_gpio_pin_3_high(void)
 {
-	uint32_t pin_output = 5;
+	uint32_t initial_val = 5;
+	some_gpio_port = initial_val;
 	unsigned int pin = 3;
-	assert_spi_pin(&pin_output, pin); //2^3 is 8
-	ASSERT_EQ(pin_output, 13); // 8 + 5, previous pins should still be set
+	assert_spi_pin(&some_gpio_port, pin);
+	ASSERT_EQ(some_gpio_port, initial_val + (1 << pin));
 	PASS();
 }
 
