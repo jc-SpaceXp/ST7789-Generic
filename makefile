@@ -58,14 +58,14 @@ TESTCC := gcc
 TESTSIZE := size
 
 TESTDIR = tests
-MOCKLIBDIR = lib/FFF
+MOCKLIBDIR = lib/fff
 TESTLIBDIR = lib/greatest
 TESTOBJDIR := $(OBJDIR)/$(TESTDIR)
 TESTCPPFLAGS := -I $(INCDIR) -I $(TESTLIBDIR) -I $(TESTDIR) -I $(MOCKLIBDIR)
 TESTCFLAGS := $(COMMON_CFLAGS) $(CMSIS_CPPFLAGS)
 
 TESTSRCS := $(wildcard $(TESTDIR)/*.c)
-TESTSRCS += $(wildcard $(SRCDIR)/spi*.c)
+TESTSRCS += $(wildcard $(SRCDIR)/spi.c)
 TESTOBJS := $(TESTSRCS:%.c=$(TESTOBJDIR)/%.o)
 
 
