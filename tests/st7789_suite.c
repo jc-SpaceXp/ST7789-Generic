@@ -46,7 +46,7 @@ TEST test_st7789_hw_reset(void)
 {
 	unsigned int res_pin = 4; // vals 0-15
 	st7789_hw_reset(&gpio_port_f, res_pin, &hw_reset_spy);
-	ASSERT_EQ(HwResetCheck[1].pin_readback, gpio_port_f & ~res_pin);
+	ASSERT_EQ(HwResetCheck[1].pin_readback, (uint16_t) 0xFFFFFFEF); // 1 << 4: 16, 255 - 16 is 0xEF
 	ASSERT_GTE(HwResetCheck[1].hold_time, 5);
 	gpio_port_f = 0xFFFFFFFF;
 	PASS();
