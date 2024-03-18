@@ -66,6 +66,7 @@ TESTCFLAGS := $(COMMON_CFLAGS) $(CMSIS_CPPFLAGS)
 
 TESTSRCS := $(wildcard $(TESTDIR)/*.c)
 TESTSRCS += $(wildcard $(SRCDIR)/spi.c)
+TESTSRCS += $(SRCDIR)/st7789.c
 TESTOBJS := $(TESTSRCS:%.c=$(TESTOBJDIR)/%.o)
 
 
