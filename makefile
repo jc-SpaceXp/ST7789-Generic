@@ -52,7 +52,8 @@ STMHALSRCS += $(STMHALDIR)/Src/stm32g4xx_hal_gpio.c
 STMHALOBJS := $(STMHALSRCS:%.c=$(OBJDIR)/%.o)
 
 TARGET = stm32g4_main
-TESTTARGET = all_tests
+SPITESTTARGET = spi_tests
+ST7789TESTTARGET = st7789_tests
 
 TESTCC := gcc
 TESTSIZE := size
@@ -64,16 +65,19 @@ TESTOBJDIR := $(OBJDIR)/$(TESTDIR)
 TESTCPPFLAGS := -I $(INCDIR) -I $(TESTLIBDIR) -I $(TESTDIR) -I $(MOCKLIBDIR)
 TESTCFLAGS := $(COMMON_CFLAGS) $(CMSIS_CPPFLAGS)
 
-TESTSRCS := $(wildcard $(TESTDIR)/*.c)
-TESTSRCS += $(SRCDIR)/spi.c
-TESTSRCS += $(SRCDIR)/st7789.c
-TESTOBJS := $(TESTSRCS:%.c=$(TESTOBJDIR)/%.o)
+SPI_TESTSRCS := $(TESTDIR)/spi_suite.c $(TESTDIR)/spi_main.c
+SPI_TESTSRCS += $(SRCDIR)/spi.c
+SPI_TESTOBJS := $(SPI_TESTSRCS:%.c=$(TESTOBJDIR)/%.o)
+
+ST7789_TESTSRCS := $(TESTDIR)/st7789_suite.c $(TESTDIR)/st7789_main.c
+ST7789_TESTSRCS += $(SRCDIR)/st7789.c
+ST7789_TESTOBJS := $(ST7789_TESTSRCS:%.c=$(TESTOBJDIR)/%.o)
 
 
 .PHONY: all clean tests srcdepdir cmsis_modules_git_update test_modules_git_update \
 flash-erase flash-write flash-backup
 all: $(TARGET).elf $(TARGET).bin
-tests: $(TESTTARGET).elf
+tests: $(SPITESTTARGET).elf $(ST7789TESTTARGET).elf
 
 flash-backup:
 	$(FLASH) read BIN_BACKUP.bin 0x08000000 0x20000
@@ -130,10 +134,15 @@ $(SRCDEPS):
 
 test_modules_git_update:
 	@echo "Initializing/updating greatest submodule"
-	git submodule update --init --remote $(LIBDIR)/greatest
+	git submodule update --init --remote $(LIBDIR)/greatest $(LIBDIR)/fff
 
 # Unit test builds
-all_tests.elf: $(TESTOBJS) | test_modules_git_update
+$(SPITESTTARGET).elf: $(SPI_TESTOBJS) | test_modules_git_update
+	@echo "Linking test objects"
+	$(TESTCC) $(TESTLDFLAGS) $(TESTLDLIBS) $^ -o $@
+	$(TESTSIZE) $@
+
+$(ST7789TESTTARGET).elf: $(ST7789_TESTOBJS) | test_modules_git_update
 	@echo "Linking test objects"
 	$(TESTCC) $(TESTLDFLAGS) $(TESTLDLIBS) $^ -o $@
 	$(TESTSIZE) $@
@@ -146,7 +155,7 @@ $(TESTOBJDIR)/%.o: %.c
 
 clean:
 	@echo "Cleaning build"
-	-$(RM) $(TARGET).{elf,bin} $(TESTTARGET).elf
+	-$(RM) $(TARGET).{elf,bin} $(SPITESTTARGET).elf $(ST7789TESTTARGET).elf:
 	-$(RM) -rf $(OBJDIR) $(DEPDIR)
 
 -include $(wildcard $(SRCDEPS))

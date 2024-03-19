@@ -5,51 +5,33 @@
 #include "st7789_suite.h"
 
 #include "st7789.h"
-#include "spi.h"
 
-struct PulseCheck {
-	uint32_t pin_readback;
-	unsigned int hold_time;
-};
+DEFINE_FFF_GLOBALS;
+FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
+FAKE_VOID_FUNC(deassert_spi_pin, uint32_t*, unsigned int);
 
 static uint32_t gpio_port_f = 0xFFFFFFFF;
 static uint32_t some_res_addr = 0xFFFFFFFF;
+static unsigned int capture_delay = 0;
 
 static struct St7789Internals some_st7789;
 
 static void setup_st7789_struct(void* arg)
 {
+	RESET_FAKE(assert_spi_pin);
+	RESET_FAKE(deassert_spi_pin);
+	FFF_RESET_HISTORY();
+	capture_delay = 0;
+
 	some_st7789.res_addr = &some_res_addr;
 	some_st7789.res_pin = 5;
 
 	(void) arg; // suppress unused warning
 }
 
-
-static struct PulseCheck HwResetCheck[5] = {
-	{ 40, 40 }
-	, { 40, 40 }
-	, { 40, 40 }
-	, { 40, 40 }
-	, { 40, 40 }
-}; 
-
-uint16_t read_gpio_port(uint32_t* port_address)
-{
-	return *port_address;
-}
-
-void hw_reset_spy(unsigned int x)
-{
-	static int i = 0;
-	HwResetCheck[i].pin_readback = read_gpio_port(some_st7789.res_addr);
-	HwResetCheck[i].hold_time = x;
-	++i;
-}
-
 void fake_delay(unsigned int x)
 {
-	(void) x;
+	capture_delay = x;
 }
 
 TEST test_st7789_hw_reset(void)
@@ -57,11 +39,14 @@ TEST test_st7789_hw_reset(void)
 	uint32_t initial_val = 0xFFFFFFFF;
 	gpio_port_f = initial_val;
 	some_st7789.res_pin = 4; // vals 0-15
-	st7789_hw_reset(&some_st7789, &hw_reset_spy);
-	ASSERT_EQ_FMT(HwResetCheck[1].pin_readback, (uint16_t) initial_val & ~(1 << some_st7789.res_pin), "%u");
-	ASSERT_GTE(HwResetCheck[1].hold_time, 5);
+	st7789_hw_reset(&some_st7789, &fake_delay);
+	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
+	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
+	ASSERT_EQ(fff.call_history[2], (void*) assert_spi_pin);
+	ASSERT_GTE(capture_delay, 5);
 	PASS();
 }
+
 
 SUITE(st7789_driver)
 {
