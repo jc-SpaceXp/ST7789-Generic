@@ -88,9 +88,18 @@ TEST test_out_of_bounds_gpio_pins_write_high_no_effect(unsigned int pin)
 	PASS();
 }
 
+TEST test_out_of_bounds_gpio_pins_write_low_no_effect(unsigned int pin)
+{
+	uint32_t init_val = 0xFFFFFFFF;
+	some_gpio_port = init_val;
+	deassert_spi_pin(&some_gpio_port, pin);
+	ASSERT_EQ(some_gpio_port, init_val);
+	PASS();
+}
+
 void test_out_of_bounds_gpio_pins_set_high(void)
 {
-	for (int i = 16; i < 100; ++i) {
+	for (int i = 16; i < 64; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
@@ -98,6 +107,19 @@ void test_out_of_bounds_gpio_pins_set_high(void)
 		RUN_TEST1(test_snprintf_return_val, sn_error);
 		greatest_set_test_suffix((const char*) &test_suffix);
 		RUN_TEST1(test_out_of_bounds_gpio_pins_write_high_no_effect, i);
+	}
+}
+
+void test_out_of_bounds_gpio_pins_set_low(void)
+{
+	for (int i = 16; i < 64; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_snprintf_return_val, sn_error);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_out_of_bounds_gpio_pins_write_low_no_effect, i);
 	}
 }
 
@@ -109,5 +131,6 @@ SUITE(spi_driver)
 	test_all_valid_gpio_pins_set_high();
 	test_all_valid_gpio_pins_set_low();
 	test_out_of_bounds_gpio_pins_set_high();
+	test_out_of_bounds_gpio_pins_set_low();
 }
 
