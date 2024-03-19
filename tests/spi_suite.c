@@ -10,6 +10,25 @@
 static uint32_t some_gpio_port = 0xFFFFFFFF;
 
 
+// Test with known value to make sure we don't rely on off-by one errors
+TEST test_write_spi_gpio_pin_7_high(void)
+{
+	uint32_t init_val = 0x10000000;
+	some_gpio_port = init_val;
+	assert_spi_pin(&some_gpio_port, 7);
+	ASSERT_EQ(some_gpio_port, (uint32_t) init_val | 0x80);
+	PASS();
+}
+
+TEST test_write_spi_gpio_pin_7_low(void)
+{
+	uint32_t init_val = 0x1000FFFF;
+	some_gpio_port = init_val;
+	deassert_spi_pin(&some_gpio_port, 7);
+	ASSERT_EQ(some_gpio_port, (uint32_t) init_val & ~0x80); // 0x1000FF7F
+	PASS();
+}
+
 TEST test_write_spi_gpio_pins_high(unsigned int pin)
 {
 	uint32_t init_val = 0x10000000;
@@ -62,6 +81,8 @@ void test_all_valid_gpio_pins_set_low(void)
 
 SUITE(spi_driver)
 {
+	RUN_TEST(test_write_spi_gpio_pin_7_high);
+	RUN_TEST(test_write_spi_gpio_pin_7_low);
 	// looped test
 	test_all_valid_gpio_pins_set_high();
 	test_all_valid_gpio_pins_set_low();
