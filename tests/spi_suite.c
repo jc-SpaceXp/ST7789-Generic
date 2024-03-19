@@ -8,6 +8,7 @@
 #include "spi.h"
 
 static uint32_t some_gpio_port = 0xFFFFFFFF;
+static uint16_t some_spi_tx_reg = 0xFFFF;
 
 
 // Test with known value to make sure we don't rely on off-by one errors
@@ -123,6 +124,15 @@ void loop_test_deassert_out_of_bounds_gpio_pins_in_walking_zeros(void)
 	}
 }
 
+TEST data_loads_into_spi_reg_for_transfer(void)
+{
+	uint16_t init_val = 0xFFFF;
+	some_spi_tx_reg = init_val;
+	trigger_spi_transfer(&some_spi_tx_reg, 0x03);
+	ASSERT_EQ(some_spi_tx_reg, 0x03);
+	PASS();
+}
+
 SUITE(spi_driver)
 {
 	RUN_TEST(write_spi_gpio_pin_7_high);
@@ -132,5 +142,7 @@ SUITE(spi_driver)
 	loop_test_deassert_all_valid_gpio_pins_in_walking_zeros();
 	loop_test_assert_out_of_bounds_gpio_pins_in_walking_ones();
 	loop_test_deassert_out_of_bounds_gpio_pins_in_walking_zeros();
+
+	RUN_TEST(data_loads_into_spi_reg_for_transfer);
 }
 
