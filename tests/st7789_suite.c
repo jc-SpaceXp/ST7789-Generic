@@ -16,7 +16,7 @@ static unsigned int capture_delay = 0;
 
 static struct St7789Internals some_st7789;
 
-static void setup_st7789_struct(void* arg)
+static void setup_st7789_tests(void* arg)
 {
 	RESET_FAKE(assert_spi_pin);
 	RESET_FAKE(deassert_spi_pin);
@@ -47,7 +47,7 @@ TEST test_st7789_hw_reset(void)
 
 SUITE(st7789_driver)
 {
-	GREATEST_SET_SETUP_CB(setup_st7789_struct, NULL);
+	GREATEST_SET_SETUP_CB(setup_st7789_tests, NULL);
 	RUN_TEST(test_st7789_hw_reset);
 }
 
