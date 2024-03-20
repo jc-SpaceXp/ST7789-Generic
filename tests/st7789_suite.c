@@ -11,7 +11,6 @@ DEFINE_FFF_GLOBALS;
 FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
 FAKE_VOID_FUNC(deassert_spi_pin, uint32_t*, unsigned int);
 
-static uint32_t gpio_port_f = 0xFFFFFFFF;
 static uint32_t some_res_addr = 0xFFFFFFFF;
 static unsigned int capture_delay = 0;
 
@@ -25,7 +24,7 @@ static void setup_st7789_struct(void* arg)
 	capture_delay = 0;
 
 	set_res_addr(&some_st7789, &some_res_addr);
-	set_res_pin(&some_st7789, 5);
+	set_res_pin(&some_st7789, 4); // values between 0-15
 
 	(void) arg; // suppress unused warning
 }
@@ -37,9 +36,6 @@ void fake_delay(unsigned int x)
 
 TEST test_st7789_hw_reset(void)
 {
-	uint32_t initial_val = 0xFFFFFFFF;
-	gpio_port_f = initial_val;
-	set_res_pin(&some_st7789, 4); // vals 0-15
 	st7789_hw_reset(&some_st7789, &fake_delay);
 	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
