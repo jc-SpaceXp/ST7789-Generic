@@ -5,6 +5,7 @@
 #include "st7789_suite.h"
 
 #include "st7789.h"
+#include "st7789_private.h"
 
 DEFINE_FFF_GLOBALS;
 FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
@@ -23,8 +24,8 @@ static void setup_st7789_struct(void* arg)
 	FFF_RESET_HISTORY();
 	capture_delay = 0;
 
-	some_st7789.res_addr = &some_res_addr;
-	some_st7789.res_pin = 5;
+	set_res_addr(&some_st7789, &some_res_addr);
+	set_res_pin(&some_st7789, 5);
 
 	(void) arg; // suppress unused warning
 }
@@ -38,7 +39,7 @@ TEST test_st7789_hw_reset(void)
 {
 	uint32_t initial_val = 0xFFFFFFFF;
 	gpio_port_f = initial_val;
-	some_st7789.res_pin = 4; // vals 0-15
+	set_res_pin(&some_st7789, 4); // vals 0-15
 	st7789_hw_reset(&some_st7789, &fake_delay);
 	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);

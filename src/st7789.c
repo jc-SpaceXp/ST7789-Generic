@@ -1,5 +1,17 @@
 #include "st7789.h"
+#include "st7789_private.h" // for opaque pointer
 #include "spi.h"
+
+
+void set_res_addr(struct St7789Internals* st7789_driver, uint32_t* res_addr)
+{
+	st7789_driver->res_addr = res_addr;
+}
+
+void set_res_pin(struct St7789Internals* st7789_driver, unsigned int res_pin)
+{
+	st7789_driver->res_pin = res_pin;
+}
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int))
 {
