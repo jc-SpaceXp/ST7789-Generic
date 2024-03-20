@@ -40,6 +40,12 @@ TEST test_st7789_hw_reset(void)
 	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
 	ASSERT_EQ(fff.call_history[2], (void*) assert_spi_pin);
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 4);
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[1], 4);
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 4);
+	ASSERT_EQ(assert_spi_pin_fake.arg0_history[0], &some_res_addr);
+	ASSERT_EQ(assert_spi_pin_fake.arg0_history[1], &some_res_addr);
+	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_res_addr);
 	ASSERT_GTE(capture_delay, 5);
 	PASS();
 }
