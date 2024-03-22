@@ -3,7 +3,7 @@
 #include "spi.h"
 
 
-void set_res_addr(struct St7789Internals* st7789_driver, uint32_t* res_addr)
+void set_res_addr(struct St7789Internals* st7789_driver, volatile uint32_t* res_addr)
 {
 	st7789_driver->res_addr = res_addr;
 }
