@@ -9,6 +9,7 @@ void set_res_addr(struct St7789Internals* st7789_driver, volatile uint32_t* res_
 void set_res_pin(struct St7789Internals* st7789_driver, unsigned int res_pin);
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int));
+void st7789_sw_reset(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg);
 
 
 #endif /* ST7789_H */
