@@ -3,47 +3,55 @@
 #include "spi.h"
 
 
-void set_res_addr(struct St7789Internals* st7789_driver, volatile uint32_t* res_addr)
+void set_spi_pin_details(struct St7789SpiPin* st7789_pin
+                        , volatile uint32_t* assert_addr
+                        , volatile uint32_t* deassert_addr
+                        , unsigned int pin)
 {
-	st7789_driver->res_addr = res_addr;
+	st7789_pin->assert_addr = assert_addr;
+	st7789_pin->deassert_addr = deassert_addr;
+	st7789_pin->pin = pin;
 }
 
-void set_res_pin(struct St7789Internals* st7789_driver, unsigned int res_pin)
+void set_st7789_pin_details(struct St7789Internals* st7789_driver, struct St7789SpiPin* st7789_pin
+                           , enum SpiSignal spi_signal)
 {
-	st7789_driver->res_pin = res_pin;
-}
+	struct St7789SpiPin* dest_pin = st7789_pin; // dst = source, will be overwritten below
+	if (spi_signal == RSX) {
+		dest_pin = &st7789_driver->rsx;
+	} else if (spi_signal == CSX) {
+		dest_pin = &st7789_driver->csx;
+	} else if (spi_signal == DCX) {
+		dest_pin = &st7789_driver->dcx;
+	}
 
-void set_dcx_addr(struct St7789Internals* st7789_driver, volatile uint32_t* dcx_addr)
-{
-	st7789_driver->dcx_addr = dcx_addr;
-}
-
-void set_dcx_pin(struct St7789Internals* st7789_driver, unsigned int dcx_pin)
-{
-	st7789_driver->dcx_pin = dcx_pin;
+	set_spi_pin_details(dest_pin
+	                   , st7789_pin->assert_addr
+	                   , st7789_pin->deassert_addr
+	                   , st7789_pin->pin);
 }
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int))
 {
 	// Must be a hi-lo transition, pulse RES for 10us minimum
 	// Ignored in sleep-in mode
-	assert_spi_pin(st7789_driver->res_addr, st7789_driver->res_pin);
+	assert_spi_pin(st7789_driver->rsx.assert_addr, st7789_driver->rsx.pin);
 	delay_us(15);
-	deassert_spi_pin(st7789_driver->res_addr, st7789_driver->res_pin);
+	deassert_spi_pin(st7789_driver->rsx.deassert_addr, st7789_driver->rsx.pin);
 	delay_us(10); // 5-9 us for a valid reset
-	assert_spi_pin(st7789_driver->res_addr, st7789_driver->res_pin);
+	assert_spi_pin(st7789_driver->rsx.assert_addr, st7789_driver->rsx.pin);
 	// Display is then blanked for 120ms
 }
 
 void st7789_sw_reset(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg)
 {
 	// DC/X is pulled lo to indicate a CMD being sent
-	deassert_spi_pin(st7789_driver->dcx_addr, st7789_driver->dcx_pin);
+	deassert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
 	// STMs internal NSS should also be able to handle this
-	deassert_spi_pin(st7789_driver->cs_addr, st7789_driver->cs_pin);
+	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
 	trigger_spi_transfer(spi_tx_reg, 0x01); // CMD byte is 0x01, no extra args needed
 
 	// Once transfer has finished pull CS high (not implemented correctly)
-	assert_spi_pin(st7789_driver->cs_addr, st7789_driver->cs_pin);
+	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
 }
