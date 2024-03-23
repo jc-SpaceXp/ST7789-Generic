@@ -111,6 +111,20 @@ TEST st7789_normal_state_after_resets(void)
 	PASS();
 }
 
+TEST st7789_transition_to_sleep_out_after_resets(void)
+{
+	st7789_hw_reset(&some_st7789, &fake_delay);
+	st7789_sw_reset(&some_st7789, &some_spi_data_reg);
+	st7789_set_sleep_out(&some_st7789, &some_spi_data_reg);
+	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
+
+	ASSERT_EQ(get_current_sleep_mode(some_st7789_modes), SleepOut);
+	ASSERT_EQ(get_current_display_mode(some_st7789_modes), NormalDisp);
+	ASSERT_EQ(get_current_idle_mode(some_st7789_modes), false);
+	ASSERT_EQ(display_is_on(some_st7789_modes), false);
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
@@ -119,5 +133,6 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_sw_reset);
 	RUN_TEST(st7789_normal_state_before_resets);
 	RUN_TEST(st7789_normal_state_after_resets);
+	RUN_TEST(st7789_transition_to_sleep_out_after_resets);
 }
 

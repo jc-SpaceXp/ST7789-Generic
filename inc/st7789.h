@@ -26,6 +26,7 @@ bool display_is_on(struct St7789Modes current_st7789_mode);
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int));
 void st7789_sw_reset(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg);
+void st7789_sleep_out_command(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg);
 
 
 #endif /* ST7789_H */
