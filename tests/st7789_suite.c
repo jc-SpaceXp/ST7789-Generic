@@ -47,6 +47,8 @@ static void setup_st7789_tests(void* arg)
 	                   , dcx_pin);
 	set_st7789_pin_details(&some_st7789, &some_st7789_pin, DCX);
 
+	initial_st7789_modes(&some_st7789.st7789_mode);
+
 	(void) arg; // suppress unused warning
 }
 
@@ -86,11 +88,22 @@ TEST test_st7789_sw_reset(void)
 	PASS();
 }
 
+TEST st7789_normal_state_before_resets(void)
+{
+	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
+	ASSERT_EQ(get_current_sleep_mode(some_st7789_modes), SleepIn);
+	ASSERT_EQ(get_current_display_mode(some_st7789_modes), NormalDisp);
+	ASSERT_EQ(get_current_idle_mode(some_st7789_modes), false);
+	ASSERT_EQ(display_is_on(some_st7789_modes), false);
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
 	GREATEST_SET_SETUP_CB(setup_st7789_tests, NULL);
 	RUN_TEST(test_st7789_hw_reset);
 	RUN_TEST(test_st7789_sw_reset);
+	RUN_TEST(st7789_normal_state_before_resets);
 }
 

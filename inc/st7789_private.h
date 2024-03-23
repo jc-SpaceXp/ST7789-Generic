@@ -7,10 +7,20 @@ struct St7789SpiPin {
 	unsigned int pin;
 };
 
+// 5 controllable (6 total), 4 modes w/ sleep out and 1 w/ sleep in
+struct St7789Modes {
+	enum SleepModes sleep_mode;
+	enum DisplayModes display_mode;
+	bool idle_mode;
+	bool display_on;
+};
+
 struct St7789Internals {
 	struct St7789SpiPin rsx; // RS, reset
 	struct St7789SpiPin csx; // CS, chip select
 	struct St7789SpiPin dcx; // DC/X, data or command (DC/X = 0 for commands)
+
+	struct St7789Modes st7789_mode;
 };
 
 #endif /* ST7789_PRIVATE_H */
