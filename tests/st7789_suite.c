@@ -100,9 +100,9 @@ TEST st7789_normal_state_before_resets(void)
 
 TEST st7789_normal_state_after_resets(void)
 {
-	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
 	st7789_hw_reset(&some_st7789, &fake_delay);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET); // SWRESET
+	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
 
 	ASSERT_EQ(get_current_sleep_mode(some_st7789_modes), SleepIn);
 	ASSERT_EQ(get_current_display_mode(some_st7789_modes), NormalDisp);
