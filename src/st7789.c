@@ -3,6 +3,12 @@
 #include "spi.h"
 
 
+
+static void set_sleep_mode(struct St7789Modes* st7789_mode, enum SleepModes new_sleep_mode)
+{
+	st7789_mode->sleep_mode = new_sleep_mode;
+}
+
 void set_spi_pin_details(struct St7789SpiPin* st7789_pin
                         , volatile uint32_t* assert_addr
                         , volatile uint32_t* deassert_addr
@@ -41,6 +47,13 @@ void initial_st7789_modes(struct St7789Modes* st7789_mode)
 	st7789_mode->display_on = false;
 }
 
+static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command_id)
+{
+	if (command_id == 0x11) {
+		set_sleep_mode(st7789_mode, SleepOut);
+	}
+}
+
 enum SleepModes get_current_sleep_mode(struct St7789Modes current_st7789_mode)
 {
 	return current_st7789_mode.sleep_mode;
@@ -61,11 +74,6 @@ bool display_is_on(struct St7789Modes current_st7789_mode)
 	return current_st7789_mode.display_on;
 }
 
-static void set_sleep_mode(struct St7789Modes* st7789_mode, enum SleepModes new_sleep_mode)
-{
-	st7789_mode->sleep_mode = new_sleep_mode;
-}
-
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int))
 {
 	// Must be a hi-lo transition, pulse RES for 10us minimum
@@ -78,31 +86,19 @@ void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(uns
 	// Display is then blanked for 120ms
 }
 
-void st7789_sw_reset(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg)
+// Assumes no args for now
+void st7789_send_command(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg, uint8_t command_id)
 {
 	// DC/X is pulled lo to indicate a CMD being sent
 	deassert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
 	// STMs internal NSS should also be able to handle this
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
-	trigger_spi_transfer(spi_tx_reg, 0x01); // CMD byte is 0x01, no extra args needed
-
-	// Once transfer has finished pull CS high (not implemented correctly)
-	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
-}
-
-void st7789_sleep_out_command(struct St7789Internals* st7789_driver, uint16_t* spi_tx_reg)
-{
-	// DC/X is pulled lo to indicate a CMD being sent
-	deassert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
-	// STMs internal NSS should also be able to handle this
-	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
-
-	trigger_spi_transfer(spi_tx_reg, 0x11); // CMD byte is 0x11, no extra args needed
+	trigger_spi_transfer(spi_tx_reg, command_id);
 
 	// Once transfer has finished pull CS high (not implemented correctly)
 	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
 
 	// Update internal state too
-	set_sleep_mode(&st7789_driver->st7789_mode, SleepOut);
+	update_st7789_modes(&st7789_driver->st7789_mode, command_id);
 }
