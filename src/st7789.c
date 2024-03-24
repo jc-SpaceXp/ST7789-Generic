@@ -69,6 +69,8 @@ static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command
 		set_display_mode(st7789_mode, NormalDisp);
 	} else if (command_id == DISPON) {
 		set_display_on(st7789_mode, true);
+	} else if (command_id == DISPOFF) {
+		set_display_on(st7789_mode, false);
 	}
 }
 
