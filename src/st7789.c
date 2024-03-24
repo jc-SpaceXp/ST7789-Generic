@@ -14,6 +14,11 @@ static void set_display_mode(struct St7789Modes* st7789_mode, enum DisplayModes 
 	st7789_mode->display_mode = new_display_mode;
 }
 
+static void set_display_on(struct St7789Modes* st7789_mode, bool new_display_on)
+{
+	st7789_mode->display_on = new_display_on;
+}
+
 void set_spi_pin_details(struct St7789SpiPin* st7789_pin
                         , volatile uint32_t* assert_addr
                         , volatile uint32_t* deassert_addr
@@ -62,6 +67,8 @@ static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command
 		set_display_mode(st7789_mode, PartialDisp);
 	} else if (command_id == NORON) {
 		set_display_mode(st7789_mode, NormalDisp);
+	} else if (command_id == DISPON) {
+		set_display_on(st7789_mode, true);
 	}
 }
 

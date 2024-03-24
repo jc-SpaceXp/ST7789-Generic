@@ -11,6 +11,7 @@
 #define SLPOUT  0x11
 #define PLTON   0x12
 #define NORON   0x13
+#define DISPON  0x29
 
 struct St7789SpiPin;
 struct St7789Modes;
