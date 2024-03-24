@@ -60,6 +60,8 @@ static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command
 		set_sleep_mode(st7789_mode, SleepOut);
 	} else if (command_id == PLTON) {
 		set_display_mode(st7789_mode, PartialDisp);
+	} else if (command_id == NORON) {
+		set_display_mode(st7789_mode, NormalDisp);
 	}
 }
 

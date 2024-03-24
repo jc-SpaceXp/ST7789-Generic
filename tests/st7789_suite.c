@@ -154,6 +154,21 @@ TEST st7789_transition_normal_to_partial_disp(void)
 	PASS();
 }
 
+TEST st7789_transition_partial_to_normal_disp(void)
+{
+	st7789_hw_reset(&some_st7789, &fake_delay);
+	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
+	st7789_send_command(&some_st7789, &some_spi_data_reg, PLTON);
+	st7789_send_command(&some_st7789, &some_spi_data_reg, NORON);
+	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
+
+	ASSERT_EQ(get_current_sleep_mode(some_st7789_modes), SleepIn);
+	ASSERT_EQ(get_current_display_mode(some_st7789_modes), NormalDisp);
+	ASSERT_EQ(get_current_idle_mode(some_st7789_modes), false);
+	ASSERT_EQ(display_is_on(some_st7789_modes), false);
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
@@ -165,5 +180,6 @@ SUITE(st7789_driver)
 	RUN_TEST(st7789_transition_to_sleep_out_after_resets);
 	RUN_TEST(st7789_transition_sleep_out_to_in);
 	RUN_TEST(st7789_transition_normal_to_partial_disp);
+	RUN_TEST(st7789_transition_partial_to_normal_disp);
 }
 
