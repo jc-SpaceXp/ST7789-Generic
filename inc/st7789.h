@@ -13,6 +13,8 @@
 #define NORON   0x13
 #define DISPOFF 0x28
 #define DISPON  0x29
+#define IDMON   0x39
+#define IDLEON  IDMON
 
 struct St7789SpiPin;
 struct St7789Modes;

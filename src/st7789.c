@@ -19,6 +19,11 @@ static void set_display_on(struct St7789Modes* st7789_mode, bool new_display_on)
 	st7789_mode->display_on = new_display_on;
 }
 
+static void set_idle_mode(struct St7789Modes* st7789_mode, bool new_idle_state)
+{
+	st7789_mode->idle_mode = new_idle_state;
+}
+
 void set_spi_pin_details(struct St7789SpiPin* st7789_pin
                         , volatile uint32_t* assert_addr
                         , volatile uint32_t* deassert_addr
@@ -71,6 +76,8 @@ static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command
 		set_display_on(st7789_mode, true);
 	} else if (command_id == DISPOFF) {
 		set_display_on(st7789_mode, false);
+	} else if (command_id == IDLEON) {
+		set_idle_mode(st7789_mode, true);
 	}
 }
 
