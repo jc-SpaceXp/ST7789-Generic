@@ -78,6 +78,8 @@ static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command
 		set_display_on(st7789_mode, false);
 	} else if (command_id == IDLEON) {
 		set_idle_mode(st7789_mode, true);
+	} else if (command_id == IDLEOFF) {
+		set_idle_mode(st7789_mode, false);
 	}
 }
 
