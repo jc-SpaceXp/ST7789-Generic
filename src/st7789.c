@@ -49,7 +49,9 @@ void initial_st7789_modes(struct St7789Modes* st7789_mode)
 
 static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command_id)
 {
-	if (command_id == SLPOUT) {
+	if (command_id == SLPIN) {
+		set_sleep_mode(st7789_mode, SleepIn);
+	} else if (command_id == SLPOUT) {
 		set_sleep_mode(st7789_mode, SleepOut);
 	}
 }

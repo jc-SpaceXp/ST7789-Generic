@@ -7,6 +7,7 @@
 // Command IDs
 #define NOP     0x00
 #define SWRESET 0x01
+#define SLPIN   0x10
 #define SLPOUT  0x11
 
 struct St7789SpiPin;
