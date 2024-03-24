@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// Command IDs
+#define NOP     0x00
+#define SWRESET 0x01
+#define SLPOUT  0x11
+
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
