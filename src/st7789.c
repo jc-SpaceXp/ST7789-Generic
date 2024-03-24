@@ -9,6 +9,11 @@ static void set_sleep_mode(struct St7789Modes* st7789_mode, enum SleepModes new_
 	st7789_mode->sleep_mode = new_sleep_mode;
 }
 
+static void set_display_mode(struct St7789Modes* st7789_mode, enum DisplayModes new_display_mode)
+{
+	st7789_mode->display_mode = new_display_mode;
+}
+
 void set_spi_pin_details(struct St7789SpiPin* st7789_pin
                         , volatile uint32_t* assert_addr
                         , volatile uint32_t* deassert_addr
@@ -53,6 +58,8 @@ static void update_st7789_modes(struct St7789Modes* st7789_mode, uint8_t command
 		set_sleep_mode(st7789_mode, SleepIn);
 	} else if (command_id == SLPOUT) {
 		set_sleep_mode(st7789_mode, SleepOut);
+	} else if (command_id == PLTON) {
+		set_display_mode(st7789_mode, PartialDisp);
 	}
 }
 

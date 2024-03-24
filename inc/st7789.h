@@ -9,6 +9,7 @@
 #define SWRESET 0x01
 #define SLPIN   0x10
 #define SLPOUT  0x11
+#define PLTON   0x12
 
 struct St7789SpiPin;
 struct St7789Modes;
