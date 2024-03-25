@@ -115,6 +115,18 @@ void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(uns
 	// Display is then blanked for 120ms
 }
 
+// Can pause/interrupt data transmission by pulling CS high
+// If we stop a byte before D0 is sent we must resend that byte
+// However, we can pause transmission after D0 has been sent in these situations
+// 1) Command - pause - Command
+// 2) Command - pause - Parameter
+// 3) Parameter - pause - Command
+// 4) Parameter - pause - Parameter
+static void pause_transmission(const struct St7789Internals* st7789_driver)
+{
+	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
+}
+
 // Assumes no args for now
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
@@ -128,7 +140,7 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 	trigger_spi_transfer(spi_tx_reg, command_id);
 
 	// Once transfer has finished pull CS high (not implemented correctly)
-	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
+	pause_transmission(st7789_driver);
 
 	// Update internal state too
 	update_st7789_modes(&st7789_driver->st7789_mode, command_id);
@@ -145,6 +157,5 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
 
 	trigger_spi_transfer(spi_tx_reg, data);
 
-	// Once transfer has finished pull CS high (not implemented correctly)
-	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
+	pause_transmission(st7789_driver);
 }
