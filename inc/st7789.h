@@ -40,7 +40,7 @@ bool display_is_on(struct St7789Modes current_st7789_mode);
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int));
 void st7789_send_command(struct St7789Internals* st7789_driver
-                        , volatile uint16_t* spi_tx_reg
+                        , volatile uint32_t* spi_tx_reg
                         , uint8_t command_id);
 
 

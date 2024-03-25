@@ -8,7 +8,7 @@
 #include "spi.h"
 
 static uint32_t some_gpio_port = 0xFFFFFFFF;
-static uint16_t some_spi_tx_reg = 0xFFFF;
+static uint32_t some_spi_tx_reg = 0xFFFF;
 
 
 // Test with known value to make sure we don't rely on off-by one errors
