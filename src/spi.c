@@ -20,7 +20,7 @@ void deassert_spi_pin(volatile uint32_t* gpio_output_addr, unsigned int gpio_pin
 	*gpio_output_addr &=  ~pin_to_bit_pos_conversion(gpio_pin);
 }
 
-void trigger_spi_transfer(uint16_t* spi_tx_reg, uint16_t data)
+void trigger_spi_transfer(volatile uint16_t* spi_tx_reg, uint16_t data)
 {
 	// STM32: Writes initiate TXFIFO, reads ineract w/ RXFIFO
 	// STM32: Data size should be set to 8 bits for 8 bit SPI transfers
