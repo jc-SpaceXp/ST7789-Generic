@@ -133,3 +133,18 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 	// Update internal state too
 	update_st7789_modes(&st7789_driver->st7789_mode, command_id);
 }
+
+void st7789_send_data(const struct St7789Internals* st7789_driver
+                     , volatile uint32_t* spi_tx_reg
+                     , uint8_t data)
+{
+	// DC/X is pulled hi to indicate data being sent
+	assert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
+	// STMs internal NSS should also be able to handle this
+	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
+
+	trigger_spi_transfer(spi_tx_reg, data);
+
+	// Once transfer has finished pull CS high (not implemented correctly)
+	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
+}

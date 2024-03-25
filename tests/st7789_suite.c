@@ -257,6 +257,20 @@ void loop_test_all_transitions(void)
 	}
 }
 
+TEST test_st7789_commands_with_args(void)
+{
+	st7789_send_command(&some_st7789, &some_spi_data_reg, CASET); // DC/X lo
+	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
+
+	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin); // DC/X
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
+	// 4 fakes for each st7789_send_command() call, now D/CX needs to high
+	ASSERT_EQ(fff.call_history[4], (void*) assert_spi_pin); // DC/X (call from arg)
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[1], 10); // 10 == DC/X pin
+
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
@@ -267,6 +281,7 @@ SUITE(st7789_driver)
 	RUN_TEST(st7789_normal_state_after_resets);
 	RUN_TEST(st7789_transition_display_off_to_on);
 	RUN_TEST(st7789_transition_display_on_to_off);
+	RUN_TEST(test_st7789_commands_with_args);
 }
 
 SUITE(st7789_driver_modes_transitions)

@@ -17,6 +17,7 @@
 #define IDLEOFF IDMOFF
 #define IDMON   0x39
 #define IDLEON  IDMON
+#define CASET   0x2A
 
 struct St7789SpiPin;
 struct St7789Modes;
@@ -42,6 +43,9 @@ void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(uns
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
                         , uint8_t command_id);
+void st7789_send_data(const struct St7789Internals* st7789_driver
+                     , volatile uint32_t* spi_tx_reg
+                     , uint8_t data);
 
 
 #endif /* ST7789_H */
