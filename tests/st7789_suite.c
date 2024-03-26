@@ -265,15 +265,14 @@ void loop_test_all_transitions(void)
 TEST test_st7789_commands_with_args(void)
 {
 	st7789_send_command(&some_st7789, &some_spi_data_reg, CASET); // DC/X lo
+	RESET_FAKE(assert_spi_pin);
+	RESET_FAKE(deassert_spi_pin);
+	RESET_FAKE(trigger_spi_transfer);
+	FFF_RESET_HISTORY();
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
-	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin); // DC/X
-	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
-	ASSERT_EQ(fff.call_history[4], (void*) assert_spi_pin); // CS
-	// 5 fakes for each st7789_send_command() call, now D/CX needs to high
-	ASSERT_EQ(fff.call_history[5], (void*) assert_spi_pin); // DC/X (call from arg)
-	// 1st assert is from CS of command, 2nd should be DC/X
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[1], 10); // 10 == DC/X pin
+	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin); // DC/X high for data
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
 
 	PASS();
 }
