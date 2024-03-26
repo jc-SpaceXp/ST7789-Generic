@@ -25,6 +25,16 @@ static void set_idle_mode(struct St7789Modes* st7789_mode, bool new_idle_state)
 	st7789_mode->idle_mode = new_idle_state;
 }
 
+uint8_t get_upper_byte(uint16_t data)
+{
+	return (data >> 8);
+}
+
+uint8_t get_lower_byte(uint16_t data)
+{
+	return (data & 0xFF);
+}
+
 void set_spi_pin_details(struct St7789SpiPin* st7789_pin
                         , volatile uint32_t* assert_addr
                         , volatile uint32_t* deassert_addr

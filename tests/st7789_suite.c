@@ -287,7 +287,8 @@ TEST test_st7789_commands_with_two_args(void)
 	RESET_FAKE(deassert_spi_pin);
 	RESET_FAKE(trigger_spi_transfer);
 	FFF_RESET_HISTORY();
-	uint8_t caset_args[2] = {0x02, 0x41};
+	unsigned int cols = 60;
+	uint8_t caset_args[2] = {get_upper_byte(cols), get_lower_byte(cols)};
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 2);
 
 	ASSERT_EQ(trigger_spi_transfer_fake.call_count, 2);

@@ -27,6 +27,10 @@ enum SpiSignal { RSX, CSX, DCX };
 enum SleepModes { SleepIn, SleepOut };
 enum DisplayModes { NormalDisp, PartialDisp };
 
+// CASET and RASET should use these funcions
+uint8_t get_upper_byte(uint16_t data);
+uint8_t get_lower_byte(uint16_t data);
+
 void set_spi_pin_details(struct St7789SpiPin* st7789_pin
                         , volatile uint32_t* assert_addr
                         , volatile uint32_t* deassert_addr
