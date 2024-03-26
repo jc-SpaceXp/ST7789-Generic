@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 // Command IDs
 #define NOP     0x00
@@ -46,6 +47,10 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 void st7789_send_data(const struct St7789Internals* st7789_driver
                      , volatile uint32_t* spi_tx_reg
                      , uint8_t data);
+void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
+                               , volatile uint32_t* spi_tx_reg
+                               , uint8_t* data
+                               , size_t total_args);
 
 
 #endif /* ST7789_H */

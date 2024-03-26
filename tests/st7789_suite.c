@@ -12,6 +12,7 @@ FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
 FAKE_VOID_FUNC(deassert_spi_pin, uint32_t*, unsigned int);
 FAKE_VOID_FUNC(trigger_spi_transfer, uint16_t*, uint16_t);
 FAKE_VALUE_FUNC(bool, tx_complete);
+FAKE_VALUE_FUNC(bool, tx_ready_to_transmit);
 
 static uint32_t some_gpio_port_b = 0xFFFFFFFF;
 static uint32_t some_gpio_port_f = 0xFFFFFFFF;
@@ -62,6 +63,7 @@ static void setup_st7789_common_tests(void)
 	set_st7789_pin_details(&some_st7789, &some_st7789_pin, DCX);
 
 	tx_complete_fake.return_val = true; // Avoid infinite loops
+	tx_ready_to_transmit_fake.return_val = true; // Avoid infinite loops
 }
 
 static void setup_st7789_tests(void* arg)
@@ -140,9 +142,10 @@ TEST test_st7789_sw_reset(void)
 	// CS must aldo be pulled low when a data needs to be sent or recieved
 	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin); // DC/X
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin); // CS
-	ASSERT_EQ(fff.call_history[2], (void*) trigger_spi_transfer);
-	ASSERT_EQ(fff.call_history[3], (void*) tx_complete);
-	ASSERT_EQ(fff.call_history[4], (void*) assert_spi_pin); // CS
+	ASSERT_EQ(fff.call_history[2], (void*) tx_ready_to_transmit);
+	ASSERT_EQ(fff.call_history[3], (void*) trigger_spi_transfer);
+	ASSERT_EQ(fff.call_history[4], (void*) tx_complete);
+	ASSERT_EQ(fff.call_history[5], (void*) assert_spi_pin); // CS
 	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10);
 	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_f);
 	ASSERT_EQ(trigger_spi_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
@@ -262,7 +265,7 @@ void loop_test_all_transitions(void)
 	}
 }
 
-TEST test_st7789_commands_with_args(void)
+TEST test_st7789_commands_with_one_arg(void)
 {
 	st7789_send_command(&some_st7789, &some_spi_data_reg, CASET); // DC/X lo
 	RESET_FAKE(assert_spi_pin);
@@ -272,6 +275,22 @@ TEST test_st7789_commands_with_args(void)
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
 	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin); // DC/X high for data
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
+
+	PASS();
+}
+
+TEST test_st7789_commands_with_two_args(void)
+{
+	st7789_send_command(&some_st7789, &some_spi_data_reg, CASET); // DC/X lo
+	RESET_FAKE(assert_spi_pin);
+	RESET_FAKE(deassert_spi_pin);
+	RESET_FAKE(trigger_spi_transfer);
+	FFF_RESET_HISTORY();
+	uint8_t caset_args[2] = {0x02, 0x41};
+	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 2);
+
+	ASSERT_EQ(trigger_spi_transfer_fake.call_count, 2);
 	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
 
 	PASS();
@@ -287,7 +306,8 @@ SUITE(st7789_driver)
 	RUN_TEST(st7789_normal_state_after_resets);
 	RUN_TEST(st7789_transition_display_off_to_on);
 	RUN_TEST(st7789_transition_display_on_to_off);
-	RUN_TEST(test_st7789_commands_with_args);
+	RUN_TEST(test_st7789_commands_with_one_arg);
+	RUN_TEST(test_st7789_commands_with_two_args);
 }
 
 SUITE(st7789_driver_modes_transitions)
