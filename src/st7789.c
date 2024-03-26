@@ -1,6 +1,7 @@
 #include "st7789.h"
 #include "st7789_private.h" // for opaque pointer
 #include "spi.h"
+#include "stm32g4xx_spi.h"
 
 
 
@@ -139,7 +140,9 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 
 	trigger_spi_transfer(spi_tx_reg, command_id);
 
-	// Once transfer has finished pull CS high (not implemented correctly)
+	while (!tx_complete()) {
+		// Wait on SPI transmission
+	}
 	pause_transmission(st7789_driver);
 
 	// Update internal state too
@@ -157,5 +160,8 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
 
 	trigger_spi_transfer(spi_tx_reg, data);
 
+	while (!tx_complete()) {
+		// Wait on SPI transmission
+	}
 	pause_transmission(st7789_driver);
 }

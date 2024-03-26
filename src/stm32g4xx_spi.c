@@ -55,3 +55,18 @@ void setup_hw_spi(void)
 	// Enable SPI module once setup is complete
 	enable_spi();
 }
+
+bool tx_complete(void)
+{
+	bool is_complete = false;
+	// For master:
+	// BSY bit is set if ongoing tx is occuring
+	// (This includes if more data will be sent immediately after due to more data in TXFIFO)
+	// so no need to check FTLVL
+	bool spi_tx_in_progress = SPI1->SR & SPI_SR_BSY;
+	if (!spi_tx_in_progress) {
+		is_complete = true;
+	}
+
+	return is_complete;
+}
