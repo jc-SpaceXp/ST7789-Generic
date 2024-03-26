@@ -37,6 +37,7 @@ static void setup_st7789_common_tests(void)
 {
 	RESET_FAKE(assert_spi_pin);
 	RESET_FAKE(deassert_spi_pin);
+	RESET_FAKE(trigger_spi_transfer);
 	FFF_RESET_HISTORY();
 	capture_delay = 0;
 
