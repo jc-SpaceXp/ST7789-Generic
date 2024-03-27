@@ -4,24 +4,38 @@
 #include "stm32g4xx_ll_spi.h"
 #include "stm32g4xx_hal_gpio.h"
 
+#define GET_REG(REG, PIN) (REG ## PIN)
+#define GET_REG_BIT0(REG, PIN) (REG ## PIN ## _0)
+#define GET_REG_BIT1(REG, PIN) (REG ## PIN ## _1)
+// Use eGET to expand the PIN macro for GET macros above
+#define eGET_REG(REG, PIN) GET_REG(REG, PIN)
+#define eGET_REG_BIT0(REG, PIN) GET_REG_BIT0(REG, PIN)
+#define eGET_REG_BIT1(REG, PIN) GET_REG_BIT1(REG, PIN)
+
 static void spi_gpio_setup(void)
 {
 	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN) | (RCC_AHB2ENR_GPIOBEN);
 	// Set all to inputs
-	GPIOB->MODER &= ~((GPIO_MODER_MODE3) | (GPIO_MODER_MODE4) | (GPIO_MODER_MODE5));
-	GPIOA->MODER &= ~(GPIO_MODER_MODE11);
+	GPIOB->MODER &= ~ (eGET_REG(GPIO_MODER_MODE, SPI_CLK_PIN)
+	                  | eGET_REG(GPIO_MODER_MODE, SPI_MISO_PIN)
+	                  | eGET_REG(GPIO_MODER_MODE, SPI_MOSI_PIN));
+	GPIOA->MODER &= ~eGET_REG(GPIO_MODER_MODE, SPI_CS_PIN);
 	// Set outputs (minus MISO)
-	GPIOB->MODER |= ((GPIO_MODER_MODE3_0) | (GPIO_MODER_MODE5_0));
-	GPIOA->MODER |= (GPIO_MODER_MODE11_0);
+	GPIOB->MODER |= eGET_REG_BIT0(GPIO_MODER_MODE, SPI_CLK_PIN)
+	                | eGET_REG_BIT0(GPIO_MODER_MODE, SPI_MOSI_PIN);
+	GPIOA->MODER |= eGET_REG_BIT0(GPIO_MODER_MODE, SPI_CS_PIN);
 	// Set push-pull (leave MISO floating)
-	GPIOB->OTYPER |= ((GPIO_OTYPER_OT3) | (GPIO_OTYPER_OT5));
-	GPIOA->OTYPER |= (GPIO_OTYPER_OT11);
+	GPIOB->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CLK_PIN)
+	                 | eGET_REG(GPIO_OTYPER_OT, SPI_MOSI_PIN);
+	GPIOA->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CS_PIN);
 	// High speed pins
-	GPIOB->OSPEEDR |= ((GPIO_OSPEEDR_OSPEED3_1) | (GPIO_OSPEEDR_OSPEED4_1) | (GPIO_OSPEEDR_OSPEED5_1));
-	GPIOA->OSPEEDR |= (GPIO_OSPEEDR_OSPEED11_1);
+	GPIOB->OSPEEDR |= eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_CLK_PIN)
+	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_MISO_PIN)
+	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_MOSI_PIN);
+	GPIOA->OSPEEDR |= eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_CS_PIN);
 	// Clear reset bit on B4, makes B4 floating input
 	// Others have no pull-up or pull-down
-	GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD4);
+	GPIOB->PUPDR &= ~eGET_REG(GPIO_PUPDR_PUPD, SPI_MISO_PIN);
 }
 
 static void enable_spi(void)
