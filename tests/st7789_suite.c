@@ -267,11 +267,6 @@ void loop_test_all_transitions(void)
 
 TEST test_st7789_commands_with_one_arg(void)
 {
-	st7789_send_command(&some_st7789, &some_spi_data_reg, CASET); // DC/X lo
-	RESET_FAKE(assert_spi_pin);
-	RESET_FAKE(deassert_spi_pin);
-	RESET_FAKE(trigger_spi_transfer);
-	FFF_RESET_HISTORY();
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
 	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin); // DC/X high for data
@@ -282,11 +277,6 @@ TEST test_st7789_commands_with_one_arg(void)
 
 TEST test_st7789_commands_with_two_args(void)
 {
-	st7789_send_command(&some_st7789, &some_spi_data_reg, CASET); // DC/X lo
-	RESET_FAKE(assert_spi_pin);
-	RESET_FAKE(deassert_spi_pin);
-	RESET_FAKE(trigger_spi_transfer);
-	FFF_RESET_HISTORY();
 	unsigned int cols = 60;
 	uint8_t caset_args[2] = {get_upper_byte(cols), get_lower_byte(cols)};
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 2);
