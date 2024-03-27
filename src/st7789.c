@@ -114,6 +114,12 @@ bool display_is_on(struct St7789Modes current_st7789_mode)
 	return current_st7789_mode.display_on;
 }
 
+uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour)
+{
+	unsigned int six_bit_colour = colour & 0x3F;
+	return (six_bit_colour << 2);
+}
+
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int))
 {
 	// Must be a hi-lo transition, pulse RES for 10us minimum

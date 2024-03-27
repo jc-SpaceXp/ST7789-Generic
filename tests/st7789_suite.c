@@ -292,15 +292,17 @@ TEST test_st7789_commands_with_four_args(void)
 TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 {
 	// CASET and RASET would have been called before
-	unsigned int r_col = 0x14 & 0x3F; // 01 0100: 6 --> 0101 0000 8 bits
-	unsigned int g_col = 0x0A & 0x3F; // 00 1010: 6 --> 0010 1000 8 bits
-	unsigned int b_col = 0x05 & 0x3F; // 00 0101: 6 --> 0001 0100 8 bits
+	unsigned int r_col = 0x14; // 01 0100: 6 --> 0101 0000 8 bits
+	unsigned int g_col = 0x0A; // 00 1010: 6 --> 0010 1000 8 bits
+	unsigned int b_col = 0x85; // 00 0101: 6 --> 0001 0100 8 bits
 	// 01 0100 0010 1000 0101: 0x14285
 	unsigned int frame_18_bit_col = (r_col << 12) | (g_col << 6) | b_col;
 	ASSERT_EQ(frame_18_bit_col, 0x14285); // what the internal frame mem should read (666 RGB)
 	// For 18-bit colour the 666 RGB format will be sent over as 3 bytes
 	// with each colour having the lowest two bits padded with zero's
-	uint8_t colour_args[3] = { r_col << 2, g_col << 2, b_col << 2};
+	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
+                             , st7789_6bit_colour_index_to_byte(g_col)
+                             , st7789_6bit_colour_index_to_byte(b_col) };
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3);
 
 

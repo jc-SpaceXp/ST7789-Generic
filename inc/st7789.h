@@ -44,6 +44,8 @@ enum DisplayModes get_current_display_mode(struct St7789Modes current_st7789_mod
 bool get_current_idle_mode(struct St7789Modes current_st7789_mode);
 bool display_is_on(struct St7789Modes current_st7789_mode);
 
+uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour);
+
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int));
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
