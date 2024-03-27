@@ -6,27 +6,22 @@
 
 static void spi_gpio_setup(void)
 {
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN | RCC_AHB2ENR_GPIOBEN;
-	GPIO_InitTypeDef GPIO_InitMiso;
-	GPIO_InitMiso.Mode = GPIO_MODE_INPUT;
-	//GPIO_InitStruct.Pull = GPIO_PULLDOWN; // Leave floating for now
-	GPIO_InitMiso.Pin = SPI_MISO_PIN;
-	HAL_GPIO_Init(SPI_MISO_PORT, &GPIO_InitMiso);
-
-	GPIO_InitTypeDef GPIO_InitMosi;
-	GPIO_InitMosi.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitMosi.Pin = SPI_MOSI_PIN;
-	HAL_GPIO_Init(SPI_MOSI_PORT, &GPIO_InitMosi);
-
-	GPIO_InitTypeDef GPIO_InitClk;
-	GPIO_InitClk.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitClk.Pin = SPI_CLK_PIN;
-	HAL_GPIO_Init(SPI_CLK_PORT, &GPIO_InitClk);
-
-	GPIO_InitTypeDef GPIO_InitCs;
-	GPIO_InitCs.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitCs.Pin = SPI_CS_PIN;
-	HAL_GPIO_Init(SPI_CS_PORT, &GPIO_InitCs);
+	RCC->AHB2ENR |= (RCC_AHB2ENR_GPIOAEN) | (RCC_AHB2ENR_GPIOBEN);
+	// Set all to inputs
+	GPIOB->MODER &= ~((GPIO_MODER_MODE3) | (GPIO_MODER_MODE4) | (GPIO_MODER_MODE5));
+	GPIOA->MODER &= ~(GPIO_MODER_MODE11);
+	// Set outputs (minus MISO)
+	GPIOB->MODER |= ((GPIO_MODER_MODE3_0) | (GPIO_MODER_MODE5_0));
+	GPIOA->MODER |= (GPIO_MODER_MODE11_0);
+	// Set push-pull (leave MISO floating)
+	GPIOB->OTYPER |= ((GPIO_OTYPER_OT3) | (GPIO_OTYPER_OT5));
+	GPIOA->OTYPER |= (GPIO_OTYPER_OT11);
+	// High speed pins
+	GPIOB->OSPEEDR |= ((GPIO_OSPEEDR_OSPEED3_1) | (GPIO_OSPEEDR_OSPEED4_1) | (GPIO_OSPEEDR_OSPEED5_1));
+	GPIOA->OSPEEDR |= (GPIO_OSPEEDR_OSPEED11_1);
+	// Clear reset bit on B4, makes B4 floating input
+	// Others have no pull-up or pull-down
+	GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD4);
 }
 
 static void enable_spi(void)
