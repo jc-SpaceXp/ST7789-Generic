@@ -14,11 +14,11 @@
 #define NORON   0x13
 #define DISPOFF 0x28
 #define DISPON  0x29
+#define CASET   0x2A
 #define IDMOFF  0x38
 #define IDLEOFF IDMOFF
 #define IDMON   0x39
 #define IDLEON  IDMON
-#define CASET   0x2A
 
 struct St7789SpiPin;
 struct St7789Modes;
