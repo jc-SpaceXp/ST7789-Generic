@@ -10,9 +10,15 @@
 #define SPI_MISO_PORT  GPIOB
 #define SPI_MOSI_PIN   5
 #define SPI_MOSI_PORT  GPIOB
-#define SPI_CS_PIN     11
+#define SPI_CS_PIN     11     // NSS in STM32, GPIO is easier to use and configure
 #define SPI_CS_PORT    GPIOA
-// Add CMD too
+// GPIO managed pins, additional signals for ST7789
+#define GPIO_CSX_PIN     8
+#define GPIO_CSX_PORT    GPIOA
+#define GPIO_DCX_PIN     12
+#define GPIO_DCX_PORT    GPIOA
+#define GPIO_RSX_PIN     0
+#define GPIO_RSX_PORT    GPIOA
 
 void setup_hw_spi(void);
 bool tx_ready_to_transmit(void);
