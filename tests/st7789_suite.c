@@ -275,13 +275,15 @@ TEST test_st7789_commands_with_one_arg(void)
 	PASS();
 }
 
-TEST test_st7789_commands_with_two_args(void)
+TEST test_st7789_commands_with_four_args(void)
 {
 	unsigned int cols = 60;
-	uint8_t caset_args[2] = {get_upper_byte(cols), get_lower_byte(cols)};
-	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 2);
+	unsigned int cole = 69;
+	uint8_t caset_args[4] = {get_upper_byte(cols), get_lower_byte(cols)
+	                        ,get_upper_byte(cole), get_lower_byte(cole)};
+	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 4);
 
-	ASSERT_EQ(trigger_spi_transfer_fake.call_count, 2);
+	ASSERT_EQ(trigger_spi_transfer_fake.call_count, 4);
 	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
 
 	PASS();
@@ -298,7 +300,7 @@ SUITE(st7789_driver)
 	RUN_TEST(st7789_transition_display_off_to_on);
 	RUN_TEST(st7789_transition_display_on_to_off);
 	RUN_TEST(test_st7789_commands_with_one_arg);
-	RUN_TEST(test_st7789_commands_with_two_args);
+	RUN_TEST(test_st7789_commands_with_four_args);
 }
 
 SUITE(st7789_driver_modes_transitions)
