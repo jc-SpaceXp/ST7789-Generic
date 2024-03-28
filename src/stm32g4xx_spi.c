@@ -20,21 +20,18 @@ static void spi_gpio_setup(void)
 	                  | eGET_REG(GPIO_MODER_MODE, SPI_MISO_PIN)
 	                  | eGET_REG(GPIO_MODER_MODE, SPI_MOSI_PIN));
 	GPIOA->MODER &= ~ (eGET_REG(GPIO_MODER_MODE, SPI_CS_PIN)
-	                  | eGET_REG(GPIO_MODER_MODE, GPIO_CSX_PIN)
 	                  | eGET_REG(GPIO_MODER_MODE, GPIO_DCX_PIN)
 	                  | eGET_REG(GPIO_MODER_MODE, GPIO_RSX_PIN));
 	// Set outputs (minus MISO)
 	GPIOB->MODER |= eGET_REG_BIT0(GPIO_MODER_MODE, SPI_CLK_PIN)
 	                | eGET_REG_BIT0(GPIO_MODER_MODE, SPI_MOSI_PIN);
 	GPIOA->MODER |= eGET_REG_BIT0(GPIO_MODER_MODE, SPI_CS_PIN)
-	                | eGET_REG_BIT0(GPIO_MODER_MODE, GPIO_CSX_PIN)
 	                | eGET_REG_BIT0(GPIO_MODER_MODE, GPIO_DCX_PIN)
 	                | eGET_REG_BIT0(GPIO_MODER_MODE, GPIO_RSX_PIN);
 	// Set push-pull (leave MISO floating)
 	GPIOB->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CLK_PIN)
 	                 | eGET_REG(GPIO_OTYPER_OT, SPI_MOSI_PIN);
 	GPIOA->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CS_PIN)
-	                 | eGET_REG(GPIO_OTYPER_OT, GPIO_CSX_PIN)
 	                 | eGET_REG(GPIO_OTYPER_OT, GPIO_DCX_PIN)
 	                 | eGET_REG(GPIO_OTYPER_OT, GPIO_RSX_PIN);
 	// High speed pins
@@ -42,7 +39,6 @@ static void spi_gpio_setup(void)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_MISO_PIN)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_MOSI_PIN);
 	GPIOA->OSPEEDR |= eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_CS_PIN)
-	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, GPIO_CSX_PIN)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, GPIO_DCX_PIN)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, GPIO_RSX_PIN);
 	// Clear reset bit on B4, makes B4 floating input
