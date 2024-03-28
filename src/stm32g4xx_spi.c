@@ -35,12 +35,7 @@ static void spi_gpio_setup(void)
 	GPIOB->AFR[0] |= (GPIO_AF5_SPI1 << eGET_AFRL_REG(GPIO_AFRL_AFSEL, SPI_CLK_PIN))
 	                 | (GPIO_AF5_SPI1 << eGET_AFRL_REG(GPIO_AFRL_AFSEL, SPI_MISO_PIN))
 	                 | (GPIO_AF5_SPI1 << eGET_AFRL_REG(GPIO_AFRL_AFSEL, SPI_MOSI_PIN));
-	// Set push-pull (leave MISO floating)
-	GPIOB->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CLK_PIN)
-	                 | eGET_REG(GPIO_OTYPER_OT, SPI_MOSI_PIN);
-	GPIOA->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CS_PIN)
-	                 | eGET_REG(GPIO_OTYPER_OT, GPIO_DCX_PIN)
-	                 | eGET_REG(GPIO_OTYPER_OT, GPIO_RSX_PIN);
+	// All GPIO ports/pins are push-pull by default (no need for OTYPER)
 	// High speed pins
 	GPIOB->OSPEEDR |= eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_CLK_PIN)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_MISO_PIN)
