@@ -7,10 +7,12 @@
 #define GET_REG(REG, PIN) (REG ## PIN)
 #define GET_REG_BIT0(REG, PIN) (REG ## PIN ## _0)
 #define GET_REG_BIT1(REG, PIN) (REG ## PIN ## _1)
+#define GET_AFRL_REG(REG, PIN) (REG ## PIN ## _Pos)
 // Use eGET to expand the PIN macro for GET macros above
 #define eGET_REG(REG, PIN) GET_REG(REG, PIN)
 #define eGET_REG_BIT0(REG, PIN) GET_REG_BIT0(REG, PIN)
 #define eGET_REG_BIT1(REG, PIN) GET_REG_BIT1(REG, PIN)
+#define eGET_AFRL_REG(REG, PIN) GET_AFRL_REG(REG, PIN)
 
 static void spi_gpio_setup(void)
 {
@@ -22,12 +24,17 @@ static void spi_gpio_setup(void)
 	GPIOA->MODER &= ~ (eGET_REG(GPIO_MODER_MODE, SPI_CS_PIN)
 	                  | eGET_REG(GPIO_MODER_MODE, GPIO_DCX_PIN)
 	                  | eGET_REG(GPIO_MODER_MODE, GPIO_RSX_PIN));
-	// Set outputs (minus MISO)
-	GPIOB->MODER |= eGET_REG_BIT0(GPIO_MODER_MODE, SPI_CLK_PIN)
-	                | eGET_REG_BIT0(GPIO_MODER_MODE, SPI_MOSI_PIN);
+	// Set GPIO (and SPI1 CS) to outputs and SPI1 to AF
+	GPIOB->MODER |= eGET_REG_BIT1(GPIO_MODER_MODE, SPI_CLK_PIN)
+	                | eGET_REG_BIT1(GPIO_MODER_MODE, SPI_MOSI_PIN);
 	GPIOA->MODER |= eGET_REG_BIT0(GPIO_MODER_MODE, SPI_CS_PIN)
+	                | eGET_REG_BIT1(GPIO_MODER_MODE, SPI_MISO_PIN)
 	                | eGET_REG_BIT0(GPIO_MODER_MODE, GPIO_DCX_PIN)
 	                | eGET_REG_BIT0(GPIO_MODER_MODE, GPIO_RSX_PIN);
+	// Use SPI alternative function
+	GPIOB->AFR[0] |= (GPIO_AF5_SPI1 << eGET_AFRL_REG(GPIO_AFRL_AFSEL, SPI_CLK_PIN))
+	                 | (GPIO_AF5_SPI1 << eGET_AFRL_REG(GPIO_AFRL_AFSEL, SPI_MISO_PIN))
+	                 | (GPIO_AF5_SPI1 << eGET_AFRL_REG(GPIO_AFRL_AFSEL, SPI_MOSI_PIN));
 	// Set push-pull (leave MISO floating)
 	GPIOB->OTYPER |= eGET_REG(GPIO_OTYPER_OT, SPI_CLK_PIN)
 	                 | eGET_REG(GPIO_OTYPER_OT, SPI_MOSI_PIN);
