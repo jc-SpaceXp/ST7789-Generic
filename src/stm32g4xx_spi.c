@@ -43,8 +43,7 @@ static void spi_gpio_setup(void)
 	GPIOA->OSPEEDR |= eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, SPI_CS_PIN)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, GPIO_DCX_PIN)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, GPIO_RSX_PIN);
-	// Clear reset bit on B4, makes B4 floating input
-	// Others have no pull-up or pull-down
+	// Clear reset bit on B4 (MISO, no pull-up or pull-down)
 	GPIOB->PUPDR &= ~eGET_REG(GPIO_PUPDR_PUPD, SPI_MISO_PIN);
 }
 
