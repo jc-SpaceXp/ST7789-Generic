@@ -6,7 +6,6 @@
 #include "st7789_private.h"
 
 #include "stm32g4xx_hal.h"
-//#include "stm32g4xx_nucleo.h"
 
 // User LED for G431KB
 #define LD2_PIN  8
