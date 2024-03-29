@@ -21,12 +21,12 @@ int main (void)
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
 	GPIOB->MODER &= ~((LD2_BIT0) | (LD2_BIT1));
 	GPIOB->MODER |= (LD2_BIT0);
-	struct St7789SpiPin ld2_pin = { &GPIOB->BSRR, &GPIOB->BRR, LD2_PIN };
+	struct St7789SpiPin ld2_pin = { &GPIOB->BSRR, &GPIOB->ODR, LD2_PIN };
 
 	for (;;) {
 		assert_spi_pin(ld2_pin.assert_addr, ld2_pin.pin); // set
 		HAL_Delay(40);
-		assert_spi_pin(ld2_pin.deassert_addr, ld2_pin.pin); // clear
+		deassert_spi_pin(ld2_pin.deassert_addr, ld2_pin.pin); // clear
 		HAL_Delay(40);
 	}
 
