@@ -62,9 +62,10 @@ void setup_hw_spi(void)
 	// CPHA 0 CPOL 0
 	// MSB first
 	// CRC disabled
-	// NSS harware managed
 	SPI1->CR1 |= LL_SPI_BAUDRATEPRESCALER_DIV16; // test with a slower clock for now
 	SPI1->CR1 |= SPI_CR1_MSTR; // STM32 is master
+	SPI1->CR1 |= SPI_CR1_SSM; // Manage NSS via software
+	SPI1->CR1 |= SPI_CR1_SSI; // Avoid MODEF SPI1 fault
 	// Adafruit ST7789 display is write only according to the datasheet
 	// Setup as simplex, master transmit only
 	SPI1->CR1 |= SPI_CR1_BIDIOE | SPI_CR1_BIDIMODE; // Write only with unidirectional data lines
