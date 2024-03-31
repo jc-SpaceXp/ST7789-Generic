@@ -1,12 +1,7 @@
-** STM32G4 Project Templates
-Some basic project templates which are intended for the arm-none-eabi-gcc
-toolchain. Does include support for unit tests if you wish to use them.
-Otherwise remove the relevant dirs if you decide against testing. Look at
-other branches for different setups e.g. FreeRTOS support, CMSIS support
-instead of Libopencm3 etc.
+** ASFM
 
-The project itself is blinking the user LED on the STM32G431KB Nucleo
-device.
+A simple file manager. Browsing a SD card source tree with an Adafruit ST7789 based display.
+
 *** Tools
 The following tools are needed to build this project
 - make
@@ -14,12 +9,12 @@ The following tools are needed to build this project
 - [[https://gcc.gnu.org/][gcc]] (for unit tests)
 - [[https://github.com/stlink-org/stlink][st-flash]] in order to interact with the STM32
 *** Submodules
-Depends on which branch you are on but here is the full list
-- [[https://libopencm3.org/][libopencm3]] or [[https://www.arm.com/technologies/cmsis][CMSIS]]
+- [[https://www.arm.com/technologies/cmsis][CMSIS V6]]
+- [[https://github.com/STMicroelectronics/stm32g4xx-nucleo-bsp][STM32G4xx Nucleo BSP]]
+- [[https://github.com/STMicroelectronics/stm32g4xx_hal_driver][STM32G4 HAL]]
+- [[https://github.com/STMicroelectronics/cmsis_device_g4][CMSIS G4]] CMSIS device library
 - [[https://github.com/silentbicycle/greatest][Greatest]] C test framework
-- [[https://www.freertos.org/][FreeRTOS]]
-
-Note: Libopencm3 is LGPLv3 licensed
+- [[https://github.com/meekrosoft/fff][FFF]] C mocking library
 
 CMSIS will also produce linker warnings due to newlib e.g. "_write is not implemented and will
 always fail". Another linker warning will appear too: elf has a LOAD segment with RWX permissions.
