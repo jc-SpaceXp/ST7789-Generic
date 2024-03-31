@@ -157,7 +157,7 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 	while (!tx_ready_to_transmit()) {
 		// Wait on SPI to become free
 	}
-	trigger_spi_transfer(spi_tx_reg, command_id);
+	trigger_spi_byte_transfer(spi_tx_reg, command_id);
 
 	while (!tx_complete()) {
 		// Wait on SPI transmission
@@ -180,7 +180,7 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
 	while (!tx_ready_to_transmit()) {
 		// Wait on SPI to become free
 	}
-	trigger_spi_transfer(spi_tx_reg, data);
+	trigger_spi_byte_transfer(spi_tx_reg, data);
 
 	while (!tx_complete()) {
 		// Wait on SPI transmission
@@ -202,7 +202,7 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 		while (!tx_ready_to_transmit()) {
 			// Wait on SPI to become free
 		}
-		trigger_spi_transfer(spi_tx_reg, *(data + i));
+		trigger_spi_byte_transfer(spi_tx_reg, *(data + i));
 	}
 
 	while (!tx_complete()) {
