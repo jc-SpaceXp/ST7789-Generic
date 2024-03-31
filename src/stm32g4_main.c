@@ -14,21 +14,29 @@
 
 int main (void)
 {
-	HAL_Init();
+	//HAL_Init();
+	unsigned int hclk_divider = 1;
+	timer_setup(hclk_divider);
 
-	RCC->CFGR |= RCC_CFGR_HPRE_DIV8;
-	// Setup LED
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
-	GPIOB->MODER &= ~((LD2_BIT0) | (LD2_BIT1));
-	GPIOB->MODER |= (LD2_BIT0);
-	struct St7789SpiPin ld2_pin = { &GPIOB->BSRR, &GPIOB->ODR, LD2_PIN };
+	setup_hw_spi();
+	// Can only use deassert_spi_pin with ODR, as BRR and BSRR require 1's to reset
+	// deassert will write a zero to a bit pos
+	struct St7789SpiPin csx_pin = { &GPIOA->BSRR, &GPIOA->ODR, SPI_CS_PIN };
+	struct St7789SpiPin rsx_pin = { &GPIOB->BSRR, &GPIOB->ODR, GPIO_RSX_PIN };
+	struct St7789SpiPin dcx_pin = { &GPIOB->BSRR, &GPIOB->ODR, GPIO_DCX_PIN };
+	// MISO/MOSI will be TXFIFO and RXFIFO, no need for a struct pin for those
+	struct St7789Internals st7789;
+	set_st7789_pin_details(&st7789, &csx_pin, CSX);
+	set_st7789_pin_details(&st7789, &dcx_pin, DCX);
+	set_st7789_pin_details(&st7789, &rsx_pin, RSX);
+	initial_st7789_modes(&st7789.st7789_mode);
 
-	for (;;) {
-		assert_spi_pin(ld2_pin.assert_addr, ld2_pin.pin); // set
-		HAL_Delay(40);
-		deassert_spi_pin(ld2_pin.deassert_addr, ld2_pin.pin); // clear
-		HAL_Delay(40);
-	}
+	// Testing commands with logic analyser
+	st7789_send_command(&st7789, &SPI1->DR, SWRESET); // 0x01
+	stm32_delay_us(120000); //delay 120ms (measured 113ms)
+
+	st7789_send_command(&st7789, &SPI1->DR, SLPOUT); // 0x11
+	stm32_delay_us(120000); //delay 120ms
 
 	return 0;
 }
