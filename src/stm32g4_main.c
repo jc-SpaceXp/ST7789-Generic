@@ -14,7 +14,6 @@
 
 int main (void)
 {
-	//HAL_Init();
 	unsigned int hclk_divider = 1;
 	timer_setup(hclk_divider);
 
