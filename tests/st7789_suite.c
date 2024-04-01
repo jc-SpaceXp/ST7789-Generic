@@ -10,7 +10,7 @@
 DEFINE_FFF_GLOBALS;
 FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
 FAKE_VOID_FUNC(deassert_spi_pin, uint32_t*, unsigned int);
-FAKE_VOID_FUNC(trigger_spi_transfer, uint16_t*, uint16_t);
+FAKE_VOID_FUNC(trigger_spi_transfer, uint32_t*, uint16_t);
 FAKE_VOID_FUNC(trigger_spi_byte_transfer, uint32_t*, uint8_t);
 FAKE_VALUE_FUNC(bool, tx_complete);
 FAKE_VALUE_FUNC(bool, tx_ready_to_transmit);
