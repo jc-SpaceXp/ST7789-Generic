@@ -21,7 +21,7 @@ int main (void)
 	// Can only use deassert_spi_pin with ODR, as BRR and BSRR require 1's to reset
 	// deassert will write a zero to a bit pos
 	struct St7789SpiPin csx_pin = { &GPIOA->BSRR, &GPIOA->ODR, SPI_CS_PIN };
-	struct St7789SpiPin rsx_pin = { &GPIOB->BSRR, &GPIOB->ODR, GPIO_RSX_PIN };
+	struct St7789SpiPin rsx_pin = { &GPIOA->BSRR, &GPIOA->ODR, GPIO_RSX_PIN };
 	struct St7789SpiPin dcx_pin = { &GPIOB->BSRR, &GPIOB->ODR, GPIO_DCX_PIN };
 	// MISO/MOSI will be TXFIFO and RXFIFO, no need for a struct pin for those
 	struct St7789Internals st7789;
