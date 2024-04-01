@@ -30,6 +30,9 @@ int main (void)
 	set_st7789_pin_details(&st7789, &rsx_pin, RSX);
 	initial_st7789_modes(&st7789.st7789_mode);
 
+	// Initial modes are:
+	// SLPIN, DISPOFF, NORMAL MODE, IDLE OFF
+
 	// Testing commands with logic analyser
 	// Power on sequence
 	st7789_hw_reset(&st7789, &stm32_delay_us);
