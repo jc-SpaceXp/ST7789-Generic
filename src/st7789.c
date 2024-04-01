@@ -151,7 +151,6 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 {
 	// DC/X is pulled lo to indicate a CMD being sent
 	deassert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
-	// STMs internal NSS should also be able to handle this
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
 	while (!tx_ready_to_transmit()) {
@@ -174,7 +173,6 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
 {
 	// DC/X is pulled hi to indicate data being sent
 	assert_spi_pin(st7789_driver->dcx.assert_addr, st7789_driver->dcx.pin);
-	// STMs internal NSS should also be able to handle this
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
 	while (!tx_ready_to_transmit()) {
@@ -195,7 +193,6 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 {
 	// DC/X is pulled hi to indicate data being sent
 	assert_spi_pin(st7789_driver->dcx.assert_addr, st7789_driver->dcx.pin);
-	// STMs internal NSS should also be able to handle this
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
 	for (size_t i = 0; i < total_args; ++i) {
