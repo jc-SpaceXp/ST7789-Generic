@@ -144,7 +144,7 @@ static void pause_transmission(const struct St7789Internals* st7789_driver)
 	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
 }
 
-void pre_st7789_transfer(struct St7789Internals* st7789_driver, enum TxCmdOrData data)
+void pre_st7789_transfer(const struct St7789Internals* st7789_driver, enum TxCmdOrData data)
 {
 	void (*data_or_command)(volatile uint32_t*, unsigned int) = &deassert_spi_pin;
 	volatile uint32_t* write_address = st7789_driver->dcx.deassert_addr;
@@ -163,9 +163,7 @@ void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
                         , uint8_t command_id)
 {
-	// DC/X is pulled lo to indicate a CMD being sent
-	deassert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
-	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
+	pre_st7789_transfer(st7789_driver, TxCmd);
 
 	while (!tx_ready_to_transmit()) {
 		// Wait on SPI to become free
@@ -185,9 +183,7 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
                      , volatile uint32_t* spi_tx_reg
                      , uint8_t data)
 {
-	// DC/X is pulled hi to indicate data being sent
-	assert_spi_pin(st7789_driver->dcx.assert_addr, st7789_driver->dcx.pin);
-	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
+	pre_st7789_transfer(st7789_driver, TxData);
 
 	while (!tx_ready_to_transmit()) {
 		// Wait on SPI to become free
@@ -205,9 +201,7 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
                                , uint8_t* data
                                , size_t total_args)
 {
-	// DC/X is pulled hi to indicate data being sent
-	assert_spi_pin(st7789_driver->dcx.assert_addr, st7789_driver->dcx.pin);
-	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
+	pre_st7789_transfer(st7789_driver, TxData);
 
 	for (size_t i = 0; i < total_args; ++i) {
 		while (!tx_ready_to_transmit()) {
