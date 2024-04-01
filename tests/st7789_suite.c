@@ -11,6 +11,7 @@ DEFINE_FFF_GLOBALS;
 FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
 FAKE_VOID_FUNC(deassert_spi_pin, uint32_t*, unsigned int);
 FAKE_VOID_FUNC(trigger_spi_transfer, uint16_t*, uint16_t);
+FAKE_VOID_FUNC(trigger_spi_byte_transfer, uint32_t*, uint8_t);
 FAKE_VALUE_FUNC(bool, tx_complete);
 FAKE_VALUE_FUNC(bool, tx_ready_to_transmit);
 
@@ -39,6 +40,7 @@ static void setup_st7789_common_tests(void)
 	RESET_FAKE(assert_spi_pin);
 	RESET_FAKE(deassert_spi_pin);
 	RESET_FAKE(trigger_spi_transfer);
+	RESET_FAKE(trigger_spi_byte_transfer);
 	FFF_RESET_HISTORY();
 	capture_delay = 0;
 
@@ -143,12 +145,12 @@ TEST test_st7789_sw_reset(void)
 	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin); // DC/X
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin); // CS
 	ASSERT_EQ(fff.call_history[2], (void*) tx_ready_to_transmit);
-	ASSERT_EQ(fff.call_history[3], (void*) trigger_spi_transfer);
+	ASSERT_EQ(fff.call_history[3], (void*) trigger_spi_byte_transfer);
 	ASSERT_EQ(fff.call_history[4], (void*) tx_complete);
 	ASSERT_EQ(fff.call_history[5], (void*) assert_spi_pin); // CS
 	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10);
 	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_f);
-	ASSERT_EQ(trigger_spi_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
 	PASS();
 }
 
@@ -283,7 +285,7 @@ TEST test_st7789_commands_with_four_args(void)
 	                        ,get_upper_byte(cole), get_lower_byte(cole)};
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 4);
 
-	ASSERT_EQ(trigger_spi_transfer_fake.call_count, 4);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 4);
 	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
 
 	PASS();
