@@ -31,6 +31,9 @@ int main (void)
 	initial_st7789_modes(&st7789.st7789_mode);
 
 	// Testing commands with logic analyser
+	// Power on sequence
+	st7789_hw_reset(&st7789, &stm32_delay_us);
+	stm32_delay_us(120000); //delay 120ms
 	st7789_send_command(&st7789, &SPI1->DR, SWRESET); // 0x01
 	stm32_delay_us(120000); //delay 120ms (measured 113ms)
 
