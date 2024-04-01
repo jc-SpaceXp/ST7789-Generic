@@ -32,6 +32,8 @@ enum SpiSignal { RSX, CSX, DCX };
 enum SleepModes { SleepIn, SleepOut };
 enum DisplayModes { NormalDisp, PartialDisp };
 
+enum TxCmdOrData { TxCmd, TxData };
+
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
 uint8_t get_lower_byte(uint16_t data);
@@ -50,6 +52,8 @@ bool get_current_idle_mode(struct St7789Modes current_st7789_mode);
 bool display_is_on(struct St7789Modes current_st7789_mode);
 
 uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour);
+
+void pre_st7789_transfer(struct St7789Internals* st7789_driver, enum TxCmdOrData data);
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int));
 void st7789_send_command(struct St7789Internals* st7789_driver

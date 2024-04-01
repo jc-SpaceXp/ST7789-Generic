@@ -121,6 +121,26 @@ TEST snprintf_return_val(bool sn_error)
 	PASS();
 }
 
+TEST test_st7789_pre_transfer_setup_for_commands(void)
+{
+	pre_st7789_transfer(&some_st7789, TxCmd);
+	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin);
+	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10); // DCX pin
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[1], 15); // CS pin
+	PASS();
+}
+
+TEST test_st7789_pre_transfer_setup_for_data(void)
+{
+	pre_st7789_transfer(&some_st7789, TxData);
+	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
+	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // DCX pin
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 15); // CS pin
+	PASS();
+}
+
 TEST test_st7789_hw_reset(void)
 {
 	st7789_hw_reset(&some_st7789, &fake_delay);
@@ -319,6 +339,8 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 SUITE(st7789_driver)
 {
 	GREATEST_SET_SETUP_CB(setup_st7789_tests, NULL);
+	RUN_TEST(test_st7789_pre_transfer_setup_for_commands);
+	RUN_TEST(test_st7789_pre_transfer_setup_for_data);
 	RUN_TEST(test_st7789_hw_reset);
 	RUN_TEST(test_st7789_sw_reset);
 	RUN_TEST(st7789_normal_state_before_resets);

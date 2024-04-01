@@ -144,6 +144,20 @@ static void pause_transmission(const struct St7789Internals* st7789_driver)
 	assert_spi_pin(st7789_driver->csx.assert_addr, st7789_driver->csx.pin);
 }
 
+void pre_st7789_transfer(struct St7789Internals* st7789_driver, enum TxCmdOrData data)
+{
+	void (*data_or_command)(volatile uint32_t*, unsigned int) = &deassert_spi_pin;
+	volatile uint32_t* write_address = st7789_driver->dcx.deassert_addr;
+
+	if (data == TxData) {
+		data_or_command = &assert_spi_pin;
+		write_address = st7789_driver->dcx.assert_addr;
+	}
+
+	data_or_command(write_address, st7789_driver->dcx.pin);
+	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
+}
+
 // Assumes no args for now
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
