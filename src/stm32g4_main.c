@@ -72,5 +72,8 @@ int main (void)
 		}
 	}
 
+	// Turn display on, is off by default
+	st7789_send_command(&st7789, &SPI1->DR, DISPON);
+
 	return 0;
 }
