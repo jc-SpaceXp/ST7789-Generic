@@ -173,7 +173,7 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
                      , uint8_t data)
 {
 	// DC/X is pulled hi to indicate data being sent
-	assert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
+	assert_spi_pin(st7789_driver->dcx.assert_addr, st7789_driver->dcx.pin);
 	// STMs internal NSS should also be able to handle this
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
@@ -194,7 +194,7 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
                                , size_t total_args)
 {
 	// DC/X is pulled hi to indicate data being sent
-	assert_spi_pin(st7789_driver->dcx.deassert_addr, st7789_driver->dcx.pin);
+	assert_spi_pin(st7789_driver->dcx.assert_addr, st7789_driver->dcx.pin);
 	// STMs internal NSS should also be able to handle this
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 
