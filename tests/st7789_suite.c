@@ -308,10 +308,10 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3);
 
 
-	ASSERT_EQ(trigger_spi_transfer_fake.call_count, 3);
-	ASSERT_EQ(trigger_spi_transfer_fake.arg1_history[0], 0x50);
-	ASSERT_EQ(trigger_spi_transfer_fake.arg1_history[1], 0x28);
-	ASSERT_EQ(trigger_spi_transfer_fake.arg1_history[2], 0x14);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 3);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x50);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[1], 0x28);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[2], 0x14);
 	PASS();
 }
 
