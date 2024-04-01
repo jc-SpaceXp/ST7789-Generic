@@ -45,6 +45,8 @@ static void spi_gpio_setup(void)
 	                  | eGET_REG_BIT1(GPIO_OSPEEDR_OSPEED, GPIO_RSX_PIN);
 	// Clear reset bit on B4 (MISO, no pull-up or pull-down)
 	GPIOB->PUPDR &= ~eGET_REG(GPIO_PUPDR_PUPD, SPI_MISO_PIN);
+	// Ensure RSX is inactive immediately
+	GPIOA->ODR |= eGET_REG(GPIO_ODR_OD, GPIO_RSX_PIN);
 }
 
 static void enable_spi(void)
