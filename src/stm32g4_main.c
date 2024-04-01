@@ -48,5 +48,12 @@ int main (void)
 	st7789_send_command(&st7789, &SPI1->DR, RASET);
 	st7789_send_data_via_array(&st7789, &SPI1->DR, raset_args, 4);
 
+	unsigned int x_start = 0;
+	unsigned int x_end = 239;
+	uint8_t caset_args[4] = { get_upper_byte(x_start), get_lower_byte(x_start)
+	                        , get_upper_byte(x_end), get_lower_byte(x_end) };
+	st7789_send_command(&st7789, &SPI1->DR, CASET);
+	st7789_send_data_via_array(&st7789, &SPI1->DR, caset_args, 4);
+
 	return 0;
 }
