@@ -158,17 +158,21 @@ void pre_st7789_transfer(const struct St7789Internals* st7789_driver, enum TxCmd
 	deassert_spi_pin(st7789_driver->csx.deassert_addr, st7789_driver->csx.pin);
 }
 
+static void st7789_transfer_byte(volatile uint32_t* spi_tx_reg, uint8_t tx_byte)
+{
+	while (!tx_ready_to_transmit()) {
+		// Wait on SPI to become free
+	}
+	trigger_spi_byte_transfer(spi_tx_reg, tx_byte);
+}
+
 // Assumes no args for now
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
                         , uint8_t command_id)
 {
 	pre_st7789_transfer(st7789_driver, TxCmd);
-
-	while (!tx_ready_to_transmit()) {
-		// Wait on SPI to become free
-	}
-	trigger_spi_byte_transfer(spi_tx_reg, command_id);
+	st7789_transfer_byte(spi_tx_reg, command_id);
 
 	while (!tx_complete()) {
 		// Wait on SPI transmission
@@ -185,10 +189,7 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
 {
 	pre_st7789_transfer(st7789_driver, TxData);
 
-	while (!tx_ready_to_transmit()) {
-		// Wait on SPI to become free
-	}
-	trigger_spi_byte_transfer(spi_tx_reg, data);
+	st7789_transfer_byte(spi_tx_reg, data);
 
 	while (!tx_complete()) {
 		// Wait on SPI transmission
@@ -204,10 +205,7 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 	pre_st7789_transfer(st7789_driver, TxData);
 
 	for (size_t i = 0; i < total_args; ++i) {
-		while (!tx_ready_to_transmit()) {
-			// Wait on SPI to become free
-		}
-		trigger_spi_byte_transfer(spi_tx_reg, *(data + i));
+		st7789_transfer_byte(spi_tx_reg, *(data + i));
 	}
 
 	while (!tx_complete()) {
