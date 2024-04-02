@@ -22,7 +22,7 @@
 #define IDMON   0x39
 #define IDLEON  IDMON
 #define COLMOD  0x3A
-#define WRMEMC  0x3A
+#define WRMEMC  0x3C
 #define RAMWRC  WRMEMC
 
 struct St7789SpiPin;
