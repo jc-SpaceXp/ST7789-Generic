@@ -14,6 +14,7 @@
 #define NORON   0x13
 #define DISPOFF 0x28
 #define DISPON  0x29
+#define INVON   0x21
 #define CASET   0x2A
 #define RASET   0x2B
 #define RAMWR   0x2C
