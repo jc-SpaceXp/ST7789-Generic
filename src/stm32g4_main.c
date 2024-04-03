@@ -36,10 +36,10 @@ int main (void)
 	// Power on sequence
 	st7789_hw_reset(&st7789, &stm32_delay_us);
 	stm32_delay_us(120000); //delay 120ms
-	st7789_send_command(&st7789, &SPI1->DR, SWRESET); // 0x01
-	stm32_delay_us(120000); //delay 120ms (measured 113ms)
+	st7789_send_command(&st7789, &SPI1->DR, SWRESET);
+	stm32_delay_us(120000); //delay 120ms
 
-	st7789_send_command(&st7789, &SPI1->DR, SLPOUT); // 0x11
+	st7789_send_command(&st7789, &SPI1->DR, SLPOUT);
 	stm32_delay_us(120000); //delay 120ms
 
 	// define whole screen region writeable
@@ -74,7 +74,6 @@ int main (void)
 		}
 	}
 	// any command after a N parameter command will stop the previous one
-	// Turn display on, is off by default
 	st7789_send_command(&st7789, &SPI1->DR, DISPON);
 
 	return 0;
