@@ -72,7 +72,6 @@ void setup_hw_spi(void)
 	// Setup as simplex, master transmit only
 	SPI1->CR1 |= SPI_CR1_BIDIOE | SPI_CR1_BIDIMODE; // Write only with unidirectional data lines
 
-	// SSOE ignored as using software NSS
 	SPI1->CR2 |= LL_SPI_DATAWIDTH_8BIT;
 
 	// Enable SPI module once setup is complete
