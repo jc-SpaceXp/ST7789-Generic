@@ -33,7 +33,6 @@ int main (void)
 	// Initial modes are:
 	// SLPIN, DISPOFF, NORMAL MODE, IDLE OFF
 
-	// Testing commands with logic analyser
 	// Power on sequence
 	st7789_hw_reset(&st7789, &stm32_delay_us);
 	stm32_delay_us(120000); //delay 120ms
