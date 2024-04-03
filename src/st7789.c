@@ -166,6 +166,15 @@ static void st7789_transfer_byte(volatile uint32_t* spi_tx_reg, uint8_t tx_byte)
 	trigger_spi_byte_transfer(spi_tx_reg, tx_byte);
 }
 
+static void post_st7789_transfer(const struct St7789Internals* st7789_driver)
+{
+	while (!tx_complete()) {
+		// Wait on SPI transmission
+	}
+	pause_transmission(st7789_driver);
+
+}
+
 // Assumes no args for now
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
@@ -173,13 +182,7 @@ void st7789_send_command(struct St7789Internals* st7789_driver
 {
 	pre_st7789_transfer(st7789_driver, TxCmd);
 	st7789_transfer_byte(spi_tx_reg, command_id);
-
-	while (!tx_complete()) {
-		// Wait on SPI transmission
-	}
-	pause_transmission(st7789_driver);
-
-	// Update internal state too
+	post_st7789_transfer(st7789_driver);
 	update_st7789_modes(&st7789_driver->st7789_mode, command_id);
 }
 
@@ -188,13 +191,8 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
                      , uint8_t data)
 {
 	pre_st7789_transfer(st7789_driver, TxData);
-
 	st7789_transfer_byte(spi_tx_reg, data);
-
-	while (!tx_complete()) {
-		// Wait on SPI transmission
-	}
-	pause_transmission(st7789_driver);
+	post_st7789_transfer(st7789_driver);
 }
 
 void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
@@ -208,8 +206,5 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 		st7789_transfer_byte(spi_tx_reg, *(data + i));
 	}
 
-	while (!tx_complete()) {
-		// Wait on SPI transmission
-	}
-	pause_transmission(st7789_driver);
+	post_st7789_transfer(st7789_driver);
 }
