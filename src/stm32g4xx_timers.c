@@ -34,3 +34,8 @@ void stm32_delay_us(unsigned int us_count)
 	// Disable timer
 	TIM2->CR1 &= ~TIM_CR1_CEN;
 }
+
+void stm32_delay_ms(unsigned int ms_count)
+{
+	stm32_delay_us(ms_count * 1000);
+}
