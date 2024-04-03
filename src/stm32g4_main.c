@@ -35,12 +35,12 @@ int main (void)
 
 	// Power on sequence
 	st7789_hw_reset(&st7789, &stm32_delay_us);
-	stm32_delay_us(120000); //delay 120ms
+	stm32_delay_ms(120);
 	st7789_send_command(&st7789, &SPI1->DR, SWRESET);
-	stm32_delay_us(120000); //delay 120ms
+	stm32_delay_ms(120);
 
 	st7789_send_command(&st7789, &SPI1->DR, SLPOUT);
-	stm32_delay_us(120000); //delay 120ms
+	stm32_delay_ms(120);
 
 	// define whole screen region writeable
 	unsigned int y_start = 0;
