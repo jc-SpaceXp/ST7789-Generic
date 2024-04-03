@@ -63,8 +63,8 @@ int main (void)
 	unsigned int g_col = 128;
 	unsigned int b_col = 255;
 	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
-	                         , st7789_6bit_colour_index_to_byte(g_col)
-	                         , st7789_6bit_colour_index_to_byte(b_col) };
+	                         , st7789_6bit_colour_index_to_byte(b_col)
+	                         , st7789_6bit_colour_index_to_byte(g_col) };
 	for (unsigned int y = 0; y <= y_end; ++y) {
 		for (unsigned int x = 0; x <= x_end; ++x) {
 			st7789_send_command(&st7789, &SPI1->DR, RAMWRC);
