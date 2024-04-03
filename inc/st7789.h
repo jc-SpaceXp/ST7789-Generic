@@ -34,6 +34,7 @@ enum SleepModes { SleepIn, SleepOut };
 enum DisplayModes { NormalDisp, PartialDisp };
 
 enum TxCmdOrData { TxCmd, TxData };
+enum TxContinueOrPause { TxPause, TxContinue };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
@@ -66,7 +67,8 @@ void st7789_send_data(const struct St7789Internals* st7789_driver
 void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
                                , volatile uint32_t* spi_tx_reg
                                , uint8_t* data
-                               , size_t total_args);
+                               , size_t total_args
+                               , enum TxContinueOrPause post_tx_action);
 
 
 #endif /* ST7789_H */

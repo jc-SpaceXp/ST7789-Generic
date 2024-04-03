@@ -303,7 +303,7 @@ TEST test_st7789_commands_with_four_args(void)
 	unsigned int cole = 69;
 	uint8_t caset_args[4] = {get_upper_byte(cols), get_lower_byte(cols)
 	                        ,get_upper_byte(cole), get_lower_byte(cole)};
-	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 4);
+	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 4, TxPause);
 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 4);
 	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
@@ -325,7 +325,7 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
                              , st7789_6bit_colour_index_to_byte(g_col)
                              , st7789_6bit_colour_index_to_byte(b_col) };
-	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3);
+	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3, TxPause);
 
 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 3);

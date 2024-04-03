@@ -49,14 +49,14 @@ int main (void)
 	uint8_t raset_args[4] = { get_upper_byte(y_start), get_lower_byte(y_start)
 	                        , get_upper_byte(y_end), get_lower_byte(y_end) };
 	st7789_send_command(&st7789, &SPI1->DR, RASET);
-	st7789_send_data_via_array(&st7789, &SPI1->DR, raset_args, 4);
+	st7789_send_data_via_array(&st7789, &SPI1->DR, raset_args, 4, TxPause);
 
 	unsigned int x_start = 0;
 	unsigned int x_end = 239;
 	uint8_t caset_args[4] = { get_upper_byte(x_start), get_lower_byte(x_start)
 	                        , get_upper_byte(x_end), get_lower_byte(x_end) };
 	st7789_send_command(&st7789, &SPI1->DR, CASET);
-	st7789_send_data_via_array(&st7789, &SPI1->DR, caset_args, 4);
+	st7789_send_data_via_array(&st7789, &SPI1->DR, caset_args, 4, TxPause);
 
 	// Needed to display the correct colour, other display is inverted
 	st7789_send_command(&st7789, &SPI1->DR, INVON);
@@ -68,13 +68,13 @@ int main (void)
 	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
 	                         , st7789_6bit_colour_index_to_byte(g_col)
 	                         , st7789_6bit_colour_index_to_byte(b_col) };
+	st7789_send_command(&st7789, &SPI1->DR, RAMWRC);
 	for (unsigned int y = 0; y <= y_end; ++y) {
 		for (unsigned int x = 0; x <= x_end; ++x) {
-			st7789_send_command(&st7789, &SPI1->DR, RAMWRC);
-			st7789_send_data_via_array(&st7789, &SPI1->DR, colour_args, 3);
+			st7789_send_data_via_array(&st7789, &SPI1->DR, colour_args, 3, TxContinue);
 		}
 	}
-
+	// any command after a N parameter command will stop the previous one
 	// Turn display on, is off by default
 	st7789_send_command(&st7789, &SPI1->DR, DISPON);
 
