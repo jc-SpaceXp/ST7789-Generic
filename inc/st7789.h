@@ -70,5 +70,13 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
                                , size_t total_args
                                , enum TxContinueOrPause post_tx_action);
 
+void st7789_set_x_coordinates(struct St7789Internals* st7789_driver
+                             , volatile uint32_t* spi_tx_reg
+                             , unsigned int x_start
+                             , unsigned int x_end);
+void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
+                             , volatile uint32_t* spi_tx_reg
+                             , unsigned int y_start
+                             , unsigned int y_end);
 
 #endif /* ST7789_H */

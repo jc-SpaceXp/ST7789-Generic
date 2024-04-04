@@ -45,17 +45,11 @@ int main (void)
 	// define whole screen region writeable
 	unsigned int y_start = 0;
 	unsigned int y_end = 319;
-	uint8_t raset_args[4] = { get_upper_byte(y_start), get_lower_byte(y_start)
-	                        , get_upper_byte(y_end), get_lower_byte(y_end) };
-	st7789_send_command(&st7789, &SPI1->DR, RASET);
-	st7789_send_data_via_array(&st7789, &SPI1->DR, raset_args, 4, TxPause);
+	st7789_set_y_coordinates(&st7789, &SPI1->DR, y_start, y_end);
 
 	unsigned int x_start = 0;
 	unsigned int x_end = 239;
-	uint8_t caset_args[4] = { get_upper_byte(x_start), get_lower_byte(x_start)
-	                        , get_upper_byte(x_end), get_lower_byte(x_end) };
-	st7789_send_command(&st7789, &SPI1->DR, CASET);
-	st7789_send_data_via_array(&st7789, &SPI1->DR, caset_args, 4, TxPause);
+	st7789_set_x_coordinates(&st7789, &SPI1->DR, x_start, x_end);
 
 	// Needed to display the correct colour, otherwise display is inverted
 	st7789_send_command(&st7789, &SPI1->DR, INVON);
