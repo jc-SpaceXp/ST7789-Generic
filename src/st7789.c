@@ -215,16 +215,30 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 }
 
 
+static void st7789_set_x_or_y_region(struct St7789Internals* st7789_driver
+                                    , volatile uint32_t* spi_tx_reg
+                                    , enum TxCasetOrRaset cmd
+                                    , unsigned int xy_start
+                                    , unsigned int xy_end)
+{
+	uint8_t cmd_args[4] = { get_upper_byte(xy_start), get_lower_byte(xy_start)
+	                      , get_upper_byte(xy_end),   get_lower_byte(xy_end) };
+
+	uint8_t command_id = CASET;
+	if (cmd == (TxRaset || TxYpos)) {
+		command_id = RASET;
+	}
+
+	st7789_send_command(st7789_driver, spi_tx_reg, command_id);
+	st7789_send_data_via_array(st7789_driver, spi_tx_reg, cmd_args, 4, TxPause);
+}
+
 void st7789_set_x_coordinates(struct St7789Internals* st7789_driver
                              , volatile uint32_t* spi_tx_reg
                              , unsigned int x_start
                              , unsigned int x_end)
 {
-	uint8_t caset_args[4] = { get_upper_byte(x_start), get_lower_byte(x_start)
-	                        , get_upper_byte(x_end), get_lower_byte(x_end) };
-
-	st7789_send_command(st7789_driver, spi_tx_reg, CASET);
-	st7789_send_data_via_array(st7789_driver, spi_tx_reg, caset_args, 4, TxPause);
+	st7789_set_x_or_y_region(st7789_driver, spi_tx_reg, TxCaset, x_start, x_end);
 }
 
 void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
@@ -232,9 +246,5 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
                              , unsigned int y_start
                              , unsigned int y_end)
 {
-	uint8_t raset_args[4] = { get_upper_byte(y_start), get_lower_byte(y_start)
-	                        , get_upper_byte(y_end), get_lower_byte(y_end) };
-
-	st7789_send_command(st7789_driver, spi_tx_reg, RASET);
-	st7789_send_data_via_array(st7789_driver, spi_tx_reg, raset_args, 4, TxPause);
+	st7789_set_x_or_y_region(st7789_driver, spi_tx_reg, TxRaset, y_start, y_end);
 }

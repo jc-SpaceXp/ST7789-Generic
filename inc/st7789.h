@@ -35,6 +35,7 @@ enum DisplayModes { NormalDisp, PartialDisp };
 
 enum TxCmdOrData { TxCmd, TxData };
 enum TxContinueOrPause { TxPause, TxContinue };
+enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
