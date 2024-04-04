@@ -335,6 +335,36 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	PASS();
 }
 
+TEST test_st7789_write_n_args_18_bit_colour(void)
+{
+	// CASET and RASET would have been called before as well as RAMWR or RAMWRC
+	unsigned int r_col = 0x14; // 01 0100: 6 --> 0101 0000 8 bits
+	unsigned int g_col = 0x0A; // 00 1010: 6 --> 0010 1000 8 bits
+	unsigned int b_col = 0x85; // 00 0101: 6 --> 0001 0100 8 bits
+	// 01 0100 0010 1000 0101: 0x14285
+	unsigned int frame_18_bit_col = (r_col << 12) | (g_col << 6) | b_col;
+	ASSERT_EQ(frame_18_bit_col, 0x14285); // what the internal frame mem should read (666 RGB)
+	// For 18-bit colour the 666 RGB format will be sent over as 3 bytes
+	// with each colour having the lowest two bits padded with zero's
+	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
+                             , st7789_6bit_colour_index_to_byte(g_col)
+                             , st7789_6bit_colour_index_to_byte(b_col) };
+	unsigned int total_args = 10;
+	for (unsigned int i = 0; i < total_args; ++i) {
+		st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3, TxContinue);
+	}
+
+	ASSERT_EQ_FMT(trigger_spi_byte_transfer_fake.call_count, 3 * total_args, "%u");
+	ASSERT_EQ(assert_spi_pin_fake.call_count, total_args); // DCX line only
+	for (unsigned int i = 0; i < total_args; ++i) {
+		ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[i * 3], 0x50);       // 0
+		ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[(i * 3) + 1], 0x28); // 1
+		ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[(i * 3) + 2], 0x14); // 2
+		ASSERT_NEQ(assert_spi_pin_fake.arg1_history[i], 15); // CS should still be low
+	}
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
@@ -350,6 +380,7 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_commands_with_one_arg);
 	RUN_TEST(test_st7789_commands_with_four_args);
 	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
+	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 }
 
 SUITE(st7789_driver_modes_transitions)
