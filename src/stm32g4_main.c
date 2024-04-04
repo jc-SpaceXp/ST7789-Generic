@@ -57,7 +57,7 @@ int main (void)
 	st7789_send_command(&st7789, &SPI1->DR, CASET);
 	st7789_send_data_via_array(&st7789, &SPI1->DR, caset_args, 4, TxPause);
 
-	// Needed to display the correct colour, other display is inverted
+	// Needed to display the correct colour, otherwise display is inverted
 	st7789_send_command(&st7789, &SPI1->DR, INVON);
 
 	// write a colour to the whole screen, converted to RGB 666
