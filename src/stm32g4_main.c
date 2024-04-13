@@ -33,11 +33,8 @@ int main (void)
 	// Initial modes are:
 	// SLPIN, DISPOFF, NORMAL MODE, IDLE OFF
 
-	// Power on sequence
-	st7789_hw_reset(&st7789, &stm32_delay_us);
-	stm32_delay_ms(120);
-	st7789_send_command(&st7789, &SPI1->DR, SWRESET);
-	stm32_delay_ms(120);
+	// Init sequence below
+	st7789_power_on_sequence(&st7789, &SPI1->DR, &stm32_delay_us);
 
 	st7789_send_command(&st7789, &SPI1->DR, SLPOUT);
 	stm32_delay_ms(120);
