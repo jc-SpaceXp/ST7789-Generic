@@ -79,5 +79,8 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
                              , volatile uint32_t* spi_tx_reg
                              , unsigned int y_start
                              , unsigned int y_end);
+void st7789_power_on_sequence(struct St7789Internals* st7789_driver
+                             , volatile uint32_t* spi_tx_reg
+                             , void (*delay_us)(unsigned int));
 
 #endif /* ST7789_H */

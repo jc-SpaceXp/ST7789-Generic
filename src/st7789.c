@@ -2,7 +2,7 @@
 #include "st7789_private.h" // for opaque pointer
 #include "spi.h"
 #include "stm32g4xx_spi.h"
-
+#include "stm32g4xx_timers.h"
 
 
 static void set_sleep_mode(struct St7789Modes* st7789_mode, enum SleepModes new_sleep_mode)
@@ -214,6 +214,18 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 	post_st7789_transfer(st7789_driver, post_tx_action);
 }
 
+void st7789_power_on_sequence(struct St7789Internals* st7789_driver
+                             , volatile uint32_t* spi_tx_reg
+                             , void (*delay_us)(unsigned int))
+{
+	void delay_ms(unsigned int ms_delay) {
+		delay_us(1000 * ms_delay);
+	}
+	st7789_hw_reset(st7789_driver, delay_us);
+	delay_ms(120);
+	st7789_send_command(st7789_driver, spi_tx_reg, SWRESET);
+	delay_ms(120);
+}
 
 static void st7789_set_x_or_y_region(struct St7789Internals* st7789_driver
                                     , volatile uint32_t* spi_tx_reg
