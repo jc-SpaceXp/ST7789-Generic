@@ -1,4 +1,5 @@
 #include "stm32g4xx.h"
+#include "stm32g4xx_timers.h"
 
 void timer_setup(unsigned int hclk_clock_divider)
 {
