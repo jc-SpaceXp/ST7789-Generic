@@ -1,7 +1,4 @@
-#include "spi.h"
-
 #include "stm32g4xx.h"
-#include "stm32g4xx_ll_spi.h"
 
 void timer_setup(unsigned int hclk_clock_divider)
 {
