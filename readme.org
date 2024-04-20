@@ -1,6 +1,6 @@
-** ASFM
+** ST7789 Generic Library
 
-A simple file manager. Browsing a SD card source tree with an Adafruit ST7789 based display.
+Generic ST7789 spi device driver library for a st7789 based display.
 
 *** Tools
 The following tools are needed to build this project
