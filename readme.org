@@ -1,22 +1,28 @@
 ** ST7789 Generic Library
 
 Generic ST7789 spi device driver library for a st7789 based display.
+*** User Defined Callbacks
 
+The user will be responsible for defining some library callbacks e.g.
+a delay function
+see: [[inc/user_defined_callbacks.h][user_defined_callbacks.h]] for the most up to date reference
+*** Makefile Adjustments
+
+Using make you can either build via this repos makefile and import into
+your own project. Or you can build this library inside your projects.
+
+You must make sure the ~TOOLSET~ make variable is consistent between this
+library and your project. ~make TOOLSET=msp430-elf-~ is an example on how
+to set the variable. By default it's set to ~arm-none-eabi-~. The gcc
+toolset is then appended to this variable e.g. gcc, gdb etc.
+
+There are also options to set your CPU/FPU flags too via ~CPUFLAGS~ and
+~FPUFLAGS~. These must be set to override the STM32G4xx presets. Again, these
+are set in the same way as the ~TOOLSET~ example above.
 *** Tools
 The following tools are needed to build this project
 - make
-- [[https://developer.arm.com/downloads/-/gnu-rm][arm-none-eabi-gcc]]
 - [[https://gcc.gnu.org/][gcc]] (for unit tests)
-- [[https://github.com/stlink-org/stlink][st-flash]] in order to interact with the STM32
 *** Submodules
-- [[https://www.arm.com/technologies/cmsis][CMSIS V6]]
-- [[https://github.com/STMicroelectronics/stm32g4xx-nucleo-bsp][STM32G4xx Nucleo BSP]]
-- [[https://github.com/STMicroelectronics/stm32g4xx_hal_driver][STM32G4 HAL]]
-- [[https://github.com/STMicroelectronics/cmsis_device_g4][CMSIS G4]] CMSIS device library
 - [[https://github.com/silentbicycle/greatest][Greatest]] C test framework
 - [[https://github.com/meekrosoft/fff][FFF]] C mocking library
-
-CMSIS will also produce linker warnings due to newlib e.g. "_write is not implemented and will
-always fail". Another linker warning will appear too: elf has a LOAD segment with RWX permissions.
-There is quite a bit of a size overhead when pulling in all the CMSIS modules. An average project
-would be around ~100Mb.
