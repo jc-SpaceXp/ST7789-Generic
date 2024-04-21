@@ -1,6 +1,8 @@
 #ifndef ST7789_PRIVATE_H
 #define ST7789_PRIVATE_H
 
+#include "user_defined_callbacks.h"
+
 struct St7789SpiPin {
 	volatile uint32_t* assert_addr;
 	volatile uint32_t* deassert_addr;
@@ -21,6 +23,8 @@ struct St7789Internals {
 	struct St7789SpiPin dcx; // DC/X, data or command (DC/X = 0 for commands)
 
 	struct St7789Modes st7789_mode;
+
+	struct UserCallbacksSt7789 user_defined;
 };
 
 #endif /* ST7789_PRIVATE_H */

@@ -58,7 +58,7 @@ uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour);
 
 void pre_st7789_transfer(const struct St7789Internals* st7789_driver, enum TxCmdOrData data);
 
-void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int));
+void st7789_hw_reset(struct St7789Internals* st7789_driver);
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
                         , uint8_t command_id);
@@ -80,7 +80,6 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
                              , unsigned int y_start
                              , unsigned int y_end);
 void st7789_power_on_sequence(struct St7789Internals* st7789_driver
-                             , volatile uint32_t* spi_tx_reg
-                             , void (*delay_us)(unsigned int));
+                             , volatile uint32_t* spi_tx_reg);
 
 #endif /* ST7789_H */

@@ -118,14 +118,14 @@ uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour)
 	return (six_bit_colour << 2);
 }
 
-void st7789_hw_reset(struct St7789Internals* st7789_driver, void (*delay_us)(unsigned int))
+void st7789_hw_reset(struct St7789Internals* st7789_driver)
 {
 	// Must be a hi-lo transition, pulse RES for 10us minimum
 	// Ignored in sleep-in mode
 	assert_spi_pin(st7789_driver->rsx.assert_addr, st7789_driver->rsx.pin);
-	delay_us(15);
+	st7789_driver->user_defined.delay_us(15);
 	deassert_spi_pin(st7789_driver->rsx.deassert_addr, st7789_driver->rsx.pin);
-	delay_us(10); // 5-9 us for a valid reset
+	st7789_driver->user_defined.delay_us(10); // 5-9 us for a valid reset
 	assert_spi_pin(st7789_driver->rsx.assert_addr, st7789_driver->rsx.pin);
 	// Display is then blanked for 120ms
 }
@@ -213,13 +213,12 @@ void st7789_send_data_via_array(const struct St7789Internals* st7789_driver
 }
 
 void st7789_power_on_sequence(struct St7789Internals* st7789_driver
-                             , volatile uint32_t* spi_tx_reg
-                             , void (*delay_us)(unsigned int))
+                             , volatile uint32_t* spi_tx_reg)
 {
 	void delay_ms(unsigned int ms_delay) {
-		delay_us(1000 * ms_delay);
+		st7789_driver->user_defined.delay_us(1000 * ms_delay);
 	}
-	st7789_hw_reset(st7789_driver, delay_us);
+	st7789_hw_reset(st7789_driver);
 	delay_ms(120);
 	st7789_send_command(st7789_driver, spi_tx_reg, SWRESET);
 	delay_ms(120);

@@ -35,6 +35,11 @@ static void init_st7789_modes_from_struct(struct St7789Modes* st7789_dest
 	*st7789_dest = st7789_src;
 }
 
+void fake_delay(unsigned int x)
+{
+	capture_delay = x;
+}
+
 static void setup_st7789_common_tests(void)
 {
 	RESET_FAKE(assert_spi_pin);
@@ -63,6 +68,8 @@ static void setup_st7789_common_tests(void)
 	                   , &some_gpio_port_f
 	                   , dcx_pin);
 	set_st7789_pin_details(&some_st7789, &some_st7789_pin, DCX);
+
+	some_st7789.user_defined.delay_us =  &fake_delay;
 
 	tx_complete_fake.return_val = true; // Avoid infinite loops
 	tx_ready_to_transmit_fake.return_val = true; // Avoid infinite loops
@@ -110,10 +117,6 @@ static enum greatest_test_res expected_display_on(struct St7789Modes expected
 	PASS();
 }
 
-void fake_delay(unsigned int x)
-{
-	capture_delay = x;
-}
 
 TEST snprintf_return_val(bool sn_error)
 {
@@ -143,7 +146,7 @@ TEST test_st7789_pre_transfer_setup_for_data(void)
 
 TEST test_st7789_hw_reset(void)
 {
-	st7789_hw_reset(&some_st7789, &fake_delay);
+	st7789_hw_reset(&some_st7789);
 	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
 	ASSERT_EQ(fff.call_history[2], (void*) assert_spi_pin);
@@ -186,7 +189,7 @@ TEST st7789_normal_state_before_resets(void)
 
 TEST st7789_normal_state_after_resets(void)
 {
-	st7789_hw_reset(&some_st7789, &fake_delay);
+	st7789_hw_reset(&some_st7789);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
 
@@ -199,7 +202,7 @@ TEST st7789_normal_state_after_resets(void)
 
 TEST st7789_transition_display_off_to_on(void)
 {
-	st7789_hw_reset(&some_st7789, &fake_delay);
+	st7789_hw_reset(&some_st7789);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, DISPON);
 	struct St7789Modes some_st7789_modes = some_st7789.st7789_mode;
@@ -213,7 +216,7 @@ TEST st7789_transition_display_off_to_on(void)
 
 TEST st7789_transition_display_on_to_off(void)
 {
-	st7789_hw_reset(&some_st7789, &fake_delay);
+	st7789_hw_reset(&some_st7789);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, DISPON);
 	st7789_send_command(&some_st7789, &some_spi_data_reg, DISPOFF);
