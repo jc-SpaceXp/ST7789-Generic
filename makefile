@@ -62,7 +62,7 @@ tests: $(SPITESTTARGET).elf $(ST7789TESTTARGET).elf
 
 $(LIBTARGET).a: $(LIBSRCOBJS)
 	@echo "Creating static library"
-	$(AR) rcs $^ $@
+	$(AR) rcs $@ $^
 	$(SIZE) $@
 
 $(OBJDIR)/$(SRCDIR)/%.o: $(SRCDIR)/%.c | srcdepdir
