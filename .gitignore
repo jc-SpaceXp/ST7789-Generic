@@ -1,5 +1,6 @@
 *.bin
 *.elf
+*.a
 *.map
 .deps/
 .obj/
