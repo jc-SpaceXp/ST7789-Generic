@@ -74,9 +74,13 @@ static void setup_st7789_common_tests(void)
 	                   , dcx_pin);
 	set_st7789_pin_details(&some_st7789, &some_st7789_pin, DCX);
 
-	some_st7789.user_defined.delay_us =  &fake_delay;
-	some_st7789.user_defined.tx_ready_to_transmit =  &fake_tx_always_return_true;
-	some_st7789.user_defined.tx_complete =  &fake_tx_always_return_true;
+	const struct UserCallbacksSt7789 some_st7789_callbacks = {
+		&fake_delay
+		, &fake_tx_always_return_true
+		, &fake_tx_always_return_true
+	};
+
+	init_st7789_callbacks(&some_st7789.user_defined, &some_st7789_callbacks);
 }
 
 static void setup_st7789_tests(void* arg)

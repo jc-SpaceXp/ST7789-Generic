@@ -29,12 +29,18 @@ int main (void)
 	set_st7789_pin_details(&st7789, &dcx_pin, DCX);
 	set_st7789_pin_details(&st7789, &rsx_pin, RSX);
 	initial_st7789_modes(&st7789.st7789_mode);
+	const struct UserCallbacksSt7789 st7789_callbacks = {
+		&stm32_delay_us
+		, &tx_ready_to_transmit
+		, &tx_complete
+	};
+	init_st7789_callbacks(&st7789.user_defined, &st7789_callbacks);
 
 	// Initial modes are:
 	// SLPIN, DISPOFF, NORMAL MODE, IDLE OFF
 
 	// Init sequence below
-	st7789_power_on_sequence(&st7789, &SPI1->DR, &stm32_delay_us);
+	st7789_power_on_sequence(&st7789, &SPI1->DR);
 
 	st7789_send_command(&st7789, &SPI1->DR, SLPOUT);
 	stm32_delay_ms(120);

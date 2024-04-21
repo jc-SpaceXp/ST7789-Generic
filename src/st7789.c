@@ -61,6 +61,11 @@ void set_st7789_pin_details(struct St7789Internals* st7789_driver, struct St7789
 	                   , st7789_pin->pin);
 }
 
+void init_st7789_callbacks(struct UserCallbacksSt7789* dest, const struct UserCallbacksSt7789* src)
+{
+	*dest = *src;
+}
+
 void initial_st7789_modes(struct St7789Modes* st7789_mode)
 {
 	// RDDPM command in the data sheets specifies these default values
