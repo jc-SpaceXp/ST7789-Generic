@@ -168,7 +168,7 @@ static void st7789_transfer_byte(volatile uint32_t* spi_tx_reg, uint8_t tx_byte
 static void post_st7789_transfer(const struct St7789Internals* st7789_driver
                                 , enum TxContinueOrPause post_tx_action)
 {
-	while (!tx_complete()) {
+	while (!st7789_driver->user_defined.tx_complete()) {
 		// Wait on SPI transmission
 	}
 

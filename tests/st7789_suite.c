@@ -76,8 +76,7 @@ static void setup_st7789_common_tests(void)
 
 	some_st7789.user_defined.delay_us =  &fake_delay;
 	some_st7789.user_defined.tx_ready_to_transmit =  &fake_tx_always_return_true;
-
-	tx_complete_fake.return_val = true; // Avoid infinite loops
+	some_st7789.user_defined.tx_complete =  &fake_tx_always_return_true;
 }
 
 static void setup_st7789_tests(void* arg)
@@ -173,8 +172,7 @@ TEST test_st7789_sw_reset(void)
 	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin); // DC/X
 	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin); // CS
 	ASSERT_EQ(fff.call_history[2], (void*) trigger_spi_byte_transfer);
-	ASSERT_EQ(fff.call_history[3], (void*) tx_complete);
-	ASSERT_EQ(fff.call_history[4], (void*) assert_spi_pin); // CS
+	ASSERT_EQ(fff.call_history[3], (void*) assert_spi_pin); // CS
 	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10);
 	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_f);
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
