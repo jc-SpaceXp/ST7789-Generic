@@ -1,8 +1,6 @@
 #include "st7789.h"
 #include "st7789_private.h" // for opaque pointer
 #include "spi.h"
-#include "stm32g4xx_spi.h"
-#include "stm32g4xx_timers.h"
 
 
 static void set_sleep_mode(struct St7789Modes* st7789_mode, enum SleepModes new_sleep_mode)
