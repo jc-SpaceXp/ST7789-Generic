@@ -388,6 +388,33 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 	PASS();
 }
 
+TEST test_st7789_power_on_sequence(void)
+{
+	st7789_power_on_sequence(&some_st7789, &some_spi_data_reg);
+	// HW RESET TEST (from above)
+	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
+	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
+	ASSERT_EQ(fff.call_history[2], (void*) assert_spi_pin);
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 4);
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[1], 4);
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 4);
+	ASSERT_EQ(assert_spi_pin_fake.arg0_history[0], &some_gpio_port_b);
+	ASSERT_EQ(assert_spi_pin_fake.arg0_history[1], &some_gpio_port_b);
+	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_b);
+	ASSERT_GTE(capture_delay, 5);
+	// SW RESET TEST (from above)
+	ASSERT_EQ(fff.call_history[3], (void*) deassert_spi_pin); // DC/X
+	ASSERT_EQ(fff.call_history[4], (void*) deassert_spi_pin); // CS
+	ASSERT_EQ(fff.call_history[5], (void*) trigger_spi_byte_transfer);
+	ASSERT_EQ(fff.call_history[6], (void*) assert_spi_pin); // CS
+	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[1], 10);
+	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[1], &some_gpio_port_f);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
+	PASS();
+
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
@@ -405,6 +432,7 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_commands_with_four_args);
 	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
+	RUN_TEST(test_st7789_power_on_sequence);
 }
 
 SUITE(st7789_driver_modes_transitions)
