@@ -29,6 +29,7 @@
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
+struct St7789Size;
 struct UserCallbacksSt7789;
 enum SpiSignal { RSX, CSX, DCX };
 enum SleepModes { SleepIn, SleepOut };
@@ -59,6 +60,8 @@ bool display_is_on(struct St7789Modes current_st7789_mode);
 uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour);
 
 void pre_st7789_transfer(const struct St7789Internals* st7789_driver, enum TxCmdOrData data);
+
+void set_screen_size(struct St7789Size* screen_size, unsigned int x, unsigned int y);
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver);
 void st7789_send_command(struct St7789Internals* st7789_driver

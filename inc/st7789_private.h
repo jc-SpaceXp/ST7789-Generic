@@ -17,12 +17,19 @@ struct St7789Modes {
 	bool display_on;
 };
 
+struct St7789Size {
+	// Typically 240x240
+	unsigned int x;
+	unsigned int y;
+};
+
 struct St7789Internals {
 	struct St7789SpiPin rsx; // RS, reset
 	struct St7789SpiPin csx; // CS, chip select
 	struct St7789SpiPin dcx; // DC/X, data or command (DC/X = 0 for commands)
 
 	struct St7789Modes st7789_mode;
+	struct St7789Size screen_size;
 
 	struct UserCallbacksSt7789 user_defined;
 };

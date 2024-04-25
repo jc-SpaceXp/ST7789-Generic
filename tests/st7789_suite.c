@@ -22,6 +22,7 @@ static unsigned int capture_delay = 0;
 
 static struct St7789SpiPin some_st7789_pin;
 static struct St7789Internals some_st7789;
+static struct St7789Size some_st7789_size;
 struct LoopTestSt7789Modes {
 	uint8_t command_id;
 	struct St7789Modes init_modes;
@@ -73,6 +74,8 @@ static void setup_st7789_common_tests(void)
 	                   , &some_gpio_port_f
 	                   , dcx_pin);
 	set_st7789_pin_details(&some_st7789, &some_st7789_pin, DCX);
+
+	set_screen_size(&some_st7789.screen_size, 240, 240);
 
 	const struct UserCallbacksSt7789 some_st7789_callbacks = {
 		&fake_delay
@@ -180,6 +183,17 @@ TEST test_st7789_sw_reset(void)
 	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10);
 	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_f);
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
+	PASS();
+}
+
+TEST test_st7789_screen_size(void)
+{
+	unsigned int x_width = 320;
+	unsigned int y_width = 240;
+	set_screen_size(&some_st7789_size, x_width, y_width);
+
+	ASSERT_EQ(x_width, some_st7789_size.x);
+	ASSERT_EQ(y_width, some_st7789_size.y);
 	PASS();
 }
 
@@ -382,6 +396,7 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_pre_transfer_setup_for_data);
 	RUN_TEST(test_st7789_hw_reset);
 	RUN_TEST(test_st7789_sw_reset);
+	RUN_TEST(test_st7789_screen_size);
 	RUN_TEST(st7789_normal_state_before_resets);
 	RUN_TEST(st7789_normal_state_after_resets);
 	RUN_TEST(st7789_transition_display_off_to_on);
