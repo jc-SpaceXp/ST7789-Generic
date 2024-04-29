@@ -163,14 +163,19 @@ static enum greatest_test_res check_command_call_history(unsigned int start)
 	PASS();
 }
 
-static enum greatest_test_res check_command_arg_history(uint8_t command_id, unsigned int start)
+static enum greatest_test_res check_command_arg_history(unsigned int start)
 {
 	// DC/X needs to be pulled lo for commands
 	// CS is also pulled lo to inidacte the beggining of a transfer
 	ASSERT_EQ(some_st7789.dcx.pin, deassert_spi_pin_fake.arg1_history[start]);
 	ASSERT_EQ(&some_gpio_port_f, deassert_spi_pin_fake.arg0_history[start]);
 	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[start + 1]);
-	ASSERT_EQ(command_id, trigger_spi_byte_transfer_fake.arg1_history[0]);
+	PASS();
+}
+
+static enum greatest_test_res check_tx_byte(uint8_t tx_byte, unsigned int start)
+{
+	ASSERT_EQ(tx_byte, trigger_spi_byte_transfer_fake.arg1_history[start]);
 	PASS();
 }
 
@@ -215,7 +220,8 @@ TEST test_st7789_sw_reset(void)
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 
 	CHECK_CALL(check_command_call_history(0));
-	CHECK_CALL(check_command_arg_history(0x01, 0)); // 0x01 == SW Reset command
+	CHECK_CALL(check_command_arg_history(0));
+	CHECK_CALL(check_tx_byte(0x01, 0)); // 0x01 == SW Reset command
 	PASS();
 }
 
@@ -226,7 +232,8 @@ TEST test_st7789_power_on_sequence(void)
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
 	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
-	CHECK_CALL(check_command_arg_history(0x01, 1)); // 0x01 == SW Reset command
+	CHECK_CALL(check_command_arg_history(1));
+	CHECK_CALL(check_tx_byte(0x01, 0)); // 0x01 == SW Reset command
 	PASS();
 }
 
