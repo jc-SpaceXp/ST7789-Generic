@@ -155,6 +155,27 @@ TEST check_hw_reset_arg_history(void)
 	PASS();
 }
 
+TEST check_command_call_history(void)
+{
+	// CS must aldo be pulled low when a data needs to be sent or recieved
+	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[0]); // DC/X
+	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[1]); // CS
+	ASSERT_EQ((void*) trigger_spi_byte_transfer, fff.call_history[2]);
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[3]); // CS
+	PASS();
+}
+
+TEST check_command_arg_history(uint8_t command_id)
+{
+	// DC/X needs to be pulled lo for commands
+	// CS is also pulled lo to inidacte the beggining of a transfer
+	ASSERT_EQ(some_st7789.dcx.pin, deassert_spi_pin_fake.arg1_history[0]);
+	ASSERT_EQ(&some_gpio_port_f, deassert_spi_pin_fake.arg0_history[0]);
+	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[1]);
+	ASSERT_EQ(command_id, trigger_spi_byte_transfer_fake.arg1_history[0]);
+	PASS();
+}
+
 
 TEST test_st7789_pre_transfer_setup_for_commands(void)
 {
@@ -188,15 +209,9 @@ TEST test_st7789_hw_reset(void)
 TEST test_st7789_sw_reset(void)
 {
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
-	// DC/X needs to be pulled lo (DC/X is an extra GPIO pin)
-	// CS must aldo be pulled low when a data needs to be sent or recieved
-	ASSERT_EQ(fff.call_history[0], (void*) deassert_spi_pin); // DC/X
-	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin); // CS
-	ASSERT_EQ(fff.call_history[2], (void*) trigger_spi_byte_transfer);
-	ASSERT_EQ(fff.call_history[3], (void*) assert_spi_pin); // CS
-	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 10);
-	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_f);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x01); // 0x01 == SW Reset command
+
+	CHECK_CALL(check_command_call_history());
+	CHECK_CALL(check_command_arg_history(0x01)); // 0x01 == SW Reset command
 	PASS();
 }
 
