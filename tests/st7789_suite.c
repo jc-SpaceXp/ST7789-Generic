@@ -168,7 +168,7 @@ static enum greatest_test_res check_command_arg_history(unsigned int start)
 	// DC/X needs to be pulled lo for commands
 	// CS is also pulled lo to inidacte the beggining of a transfer
 	ASSERT_EQ(some_st7789.dcx.pin, deassert_spi_pin_fake.arg1_history[start]);
-	ASSERT_EQ(&some_gpio_port_f, deassert_spi_pin_fake.arg0_history[start]);
+	ASSERT_EQ(some_st7789.dcx.deassert_addr, deassert_spi_pin_fake.arg0_history[start]);
 	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[start + 1]);
 	PASS();
 }
