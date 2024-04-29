@@ -135,6 +135,27 @@ TEST snprintf_return_val(bool sn_error)
 	PASS();
 }
 
+TEST check_hw_reset_call_history(void)
+{
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[0]);
+	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[1]);
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[2]);
+	PASS();
+}
+
+TEST check_hw_reset_arg_history(void)
+{
+	ASSERT_EQ(some_st7789.rsx.pin, assert_spi_pin_fake.arg1_history[0]);
+	ASSERT_EQ(some_st7789.rsx.pin, assert_spi_pin_fake.arg1_history[1]);
+	ASSERT_EQ(some_st7789.rsx.pin, deassert_spi_pin_fake.arg1_history[0]);
+	ASSERT_EQ(&some_gpio_port_b, assert_spi_pin_fake.arg0_history[0]);
+	ASSERT_EQ(&some_gpio_port_b, assert_spi_pin_fake.arg0_history[1]);
+	ASSERT_EQ(&some_gpio_port_b, deassert_spi_pin_fake.arg0_history[0]);
+	ASSERT_GTE(capture_delay, 5); // 5us delay
+	PASS();
+}
+
+
 TEST test_st7789_pre_transfer_setup_for_commands(void)
 {
 	pre_st7789_transfer(&some_st7789, TxCmd);
@@ -158,16 +179,9 @@ TEST test_st7789_pre_transfer_setup_for_data(void)
 TEST test_st7789_hw_reset(void)
 {
 	st7789_hw_reset(&some_st7789);
-	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin);
-	ASSERT_EQ(fff.call_history[1], (void*) deassert_spi_pin);
-	ASSERT_EQ(fff.call_history[2], (void*) assert_spi_pin);
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 4);
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[1], 4);
-	ASSERT_EQ(deassert_spi_pin_fake.arg1_history[0], 4);
-	ASSERT_EQ(assert_spi_pin_fake.arg0_history[0], &some_gpio_port_b);
-	ASSERT_EQ(assert_spi_pin_fake.arg0_history[1], &some_gpio_port_b);
-	ASSERT_EQ(deassert_spi_pin_fake.arg0_history[0], &some_gpio_port_b);
-	ASSERT_GTE(capture_delay, 5);
+
+	CHECK_CALL(check_hw_reset_call_history());
+	CHECK_CALL(check_hw_reset_arg_history());
 	PASS();
 }
 
