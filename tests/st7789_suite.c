@@ -128,14 +128,7 @@ static enum greatest_test_res expected_display_on(struct St7789Modes expected
 	PASS();
 }
 
-
-TEST snprintf_return_val(bool sn_error)
-{
-	ASSERT_FALSE(sn_error);
-	PASS();
-}
-
-TEST check_hw_reset_call_history(void)
+static enum greatest_test_res check_hw_reset_call_history(void)
 {
 	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[0]);
 	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[1]);
@@ -143,7 +136,7 @@ TEST check_hw_reset_call_history(void)
 	PASS();
 }
 
-TEST check_hw_reset_arg_history(void)
+static enum greatest_test_res check_hw_reset_arg_history(void)
 {
 	ASSERT_EQ(some_st7789.rsx.pin, assert_spi_pin_fake.arg1_history[0]);
 	ASSERT_EQ(some_st7789.rsx.pin, assert_spi_pin_fake.arg1_history[1]);
@@ -155,7 +148,7 @@ TEST check_hw_reset_arg_history(void)
 	PASS();
 }
 
-TEST check_command_call_history(void)
+static enum greatest_test_res check_command_call_history(void)
 {
 	// CS must aldo be pulled low when a data needs to be sent or recieved
 	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[0]); // DC/X
@@ -165,7 +158,7 @@ TEST check_command_call_history(void)
 	PASS();
 }
 
-TEST check_command_arg_history(uint8_t command_id)
+static enum greatest_test_res check_command_arg_history(uint8_t command_id)
 {
 	// DC/X needs to be pulled lo for commands
 	// CS is also pulled lo to inidacte the beggining of a transfer
@@ -173,6 +166,12 @@ TEST check_command_arg_history(uint8_t command_id)
 	ASSERT_EQ(&some_gpio_port_f, deassert_spi_pin_fake.arg0_history[0]);
 	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[1]);
 	ASSERT_EQ(command_id, trigger_spi_byte_transfer_fake.arg1_history[0]);
+	PASS();
+}
+
+TEST snprintf_return_val(bool sn_error)
+{
+	ASSERT_FALSE(sn_error);
 	PASS();
 }
 
