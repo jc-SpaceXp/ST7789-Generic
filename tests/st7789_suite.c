@@ -217,23 +217,25 @@ TEST test_st7789_hw_reset(void)
 
 TEST test_st7789_sw_reset(void)
 {
+	unsigned int previous_commands = 0;
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 
-	CHECK_CALL(check_command_call_history(0));
-	CHECK_CALL(check_command_arg_history(0));
-	CHECK_CALL(check_tx_byte(0x01, 0)); // 0x01 == SW Reset command
+	CHECK_CALL(check_command_call_history(previous_commands));
+	CHECK_CALL(check_command_arg_history(previous_commands));
+	CHECK_CALL(check_tx_byte(0x01, previous_commands)); // 0x01 == SW Reset command
 	PASS();
 }
 
 TEST test_st7789_power_on_sequence(void)
 {
+	unsigned int previous_tx_commands = 0;
 	st7789_power_on_sequence(&some_st7789, &some_spi_data_reg);
 
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
 	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
 	CHECK_CALL(check_command_arg_history(1));
-	CHECK_CALL(check_tx_byte(0x01, 0)); // 0x01 == SW Reset command
+	CHECK_CALL(check_tx_byte(0x01, previous_tx_commands)); // 0x01 == SW Reset command
 	PASS();
 }
 
