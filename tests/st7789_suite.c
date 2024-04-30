@@ -23,6 +23,20 @@ static unsigned int capture_delay = 0;
 static struct St7789SpiPin some_st7789_pin;
 static struct St7789Internals some_st7789;
 static struct St7789Size some_st7789_size;
+
+struct LoopTestSt7789Init {
+	struct {
+		enum InitInversion invert;
+		enum SetScreenRegion screen_region;
+	};
+	// INVON, CASET, RASET
+	// (SWRESET and SLPOUT are always called hence not needed here)
+	struct St7789ExpectedTx {
+		uint8_t tx_byte;
+		bool tx_expected;
+	} tx[3];
+};
+
 struct LoopTestSt7789Modes {
 	uint8_t command_id;
 	struct St7789Modes init_modes;
@@ -263,13 +277,13 @@ TEST test_st7789_screen_size(void)
 	PASS();
 }
 
-TEST test_st7789_init_sequence(void)
+TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 {
-	unsigned int previous_tx_commands = 0;
 	unsigned int x_width = 320;
 	unsigned int y_width = 240;
 	set_screen_size(&some_st7789_size, x_width, y_width);
-	st7789_init_sequence(&some_st7789, &some_spi_data_reg, InvertOff, Ignore);
+	st7789_init_sequence(&some_st7789, &some_spi_data_reg
+	                    , st7789_init->invert, st7789_init->screen_region);
 
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
@@ -277,7 +291,10 @@ TEST test_st7789_init_sequence(void)
 	CHECK_CALL(check_command_arg_history(1));
 	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
-	CHECK_CALL(tx_byte_was_sent(INVON, false));
+	for (int i = 0; i < 3; ++i) { // tx struct array size is 3
+		// INVON, CASET, RASET
+		CHECK_CALL(tx_byte_was_sent(st7789_init->tx[i].tx_byte, st7789_init->tx[i].tx_expected));
+	}
 	PASS();
 }
 
@@ -394,6 +411,27 @@ void loop_test_all_transitions(void)
 	}
 }
 
+void loop_test_all_init_possibilities(void)
+{
+	const struct LoopTestSt7789Init st7789_init[4] = {
+		{ {InvertOff, Ignore},      { {INVON, false}, {CASET, false}, {RASET, false} } }
+		, { {InvertOn, Ignore},     { {INVON, true}, {CASET, false}, {RASET, false} } }
+		, { {InvertOff, SetRegion}, { {INVON, false}, {CASET, true}, {RASET, true} } }
+		, { {InvertOn, SetRegion},  { {INVON, true}, {CASET, true}, {RASET, true} } }
+	};
+
+	for (int i = 0; i < 4; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_st7789_init_sequence, &st7789_init[i]);
+	}
+}
+
 TEST test_st7789_commands_with_one_arg(void)
 {
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
@@ -482,7 +520,7 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_sw_reset);
 	RUN_TEST(test_st7789_power_on_sequence);
 	RUN_TEST(test_st7789_screen_size);
-	RUN_TEST(test_st7789_init_sequence);
+	loop_test_all_init_possibilities();
 	RUN_TEST(st7789_normal_state_before_resets);
 	RUN_TEST(st7789_normal_state_after_resets);
 	RUN_TEST(st7789_transition_display_off_to_on);
