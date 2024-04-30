@@ -236,6 +236,32 @@ void st7789_power_on_sequence(struct St7789Internals* st7789_driver
 	delay_ms(120);
 }
 
+void st7789_init_sequence(struct St7789Internals* st7789_driver
+                         , volatile uint32_t* spi_tx_reg
+                         , enum InitInversion invert
+                         , enum SetScreenRegion screen_region)
+{
+	void delay_ms(unsigned int ms_delay) {
+		st7789_driver->user_defined.delay_us(1000 * ms_delay);
+	}
+	// Initial modes are:
+	// SPLIN, DISPOFF, NORMAL MODE, IDLE OFF
+	st7789_power_on_sequence(st7789_driver, spi_tx_reg);
+	st7789_send_command(st7789_driver, spi_tx_reg, SLPOUT);
+	delay_ms(120);
+	// Optionally invert screen, necessary for some screens to display correct colour
+	if (invert == InvertOn) { st7789_send_command(st7789_driver, spi_tx_reg, INVON); }
+	// Set screen size and set a colour
+	if (screen_region == SetRegion) {
+		unsigned int y_start = 0;
+		unsigned int y_end = st7789_driver->screen_size.y - 1;
+		st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end);
+		unsigned int x_start = 0;
+		unsigned int x_end = st7789_driver->screen_size.x - 1;
+		st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end);
+	}
+}
+
 static void st7789_set_x_or_y_region(struct St7789Internals* st7789_driver
                                     , volatile uint32_t* spi_tx_reg
                                     , enum TxCasetOrRaset cmd

@@ -179,6 +179,19 @@ static enum greatest_test_res check_tx_byte(uint8_t tx_byte, unsigned int start)
 	PASS();
 }
 
+static enum greatest_test_res tx_byte_was_sent(uint8_t tx_byte, bool expected)
+{
+	bool tx_byte_detected = false;
+	for (int i = 0; i < (int) trigger_spi_byte_transfer_fake.call_count; ++i) {
+		if (trigger_spi_byte_transfer_fake.arg1_history[i] == tx_byte) {
+			tx_byte_detected = true;
+			break;
+		}
+	}
+	ASSERT(tx_byte_detected == expected);
+	PASS();
+}
+
 TEST snprintf_return_val(bool sn_error)
 {
 	ASSERT_FALSE(sn_error);
@@ -247,6 +260,24 @@ TEST test_st7789_screen_size(void)
 
 	ASSERT_EQ(x_width, some_st7789_size.x);
 	ASSERT_EQ(y_width, some_st7789_size.y);
+	PASS();
+}
+
+TEST test_st7789_init_sequence(void)
+{
+	unsigned int previous_tx_commands = 0;
+	unsigned int x_width = 320;
+	unsigned int y_width = 240;
+	set_screen_size(&some_st7789_size, x_width, y_width);
+	st7789_init_sequence(&some_st7789, &some_spi_data_reg, InvertOff, Ignore);
+
+	CHECK_CALL(check_hw_reset_call_history());
+	CHECK_CALL(check_hw_reset_arg_history());
+	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
+	CHECK_CALL(check_command_arg_history(1));
+	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
+	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
+	CHECK_CALL(tx_byte_was_sent(INVON, false));
 	PASS();
 }
 
@@ -451,6 +482,7 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_sw_reset);
 	RUN_TEST(test_st7789_power_on_sequence);
 	RUN_TEST(test_st7789_screen_size);
+	RUN_TEST(test_st7789_init_sequence);
 	RUN_TEST(st7789_normal_state_before_resets);
 	RUN_TEST(st7789_normal_state_after_resets);
 	RUN_TEST(st7789_transition_display_off_to_on);

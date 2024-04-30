@@ -39,6 +39,9 @@ enum TxCmdOrData { TxCmd, TxData };
 enum TxContinueOrPause { TxPause, TxContinue };
 enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
+enum InitInversion { InvertOff, InvertOn };
+enum SetScreenRegion { Ignore, SetRegion };
+
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
 uint8_t get_lower_byte(uint16_t data);
@@ -86,5 +89,9 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
                              , unsigned int y_end);
 void st7789_power_on_sequence(struct St7789Internals* st7789_driver
                              , volatile uint32_t* spi_tx_reg);
+void st7789_init_sequence(struct St7789Internals* st7789_driver
+                         , volatile uint32_t* spi_tx_reg
+                         , enum InitInversion invert
+                         , enum SetScreenRegion screen_region);
 
 #endif /* ST7789_H */
