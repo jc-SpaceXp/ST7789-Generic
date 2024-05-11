@@ -41,6 +41,7 @@ enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
 enum InitInversion { InvertOff, InvertOn };
 enum SetScreenRegion { IgnoreRegion, SetRegion };
+enum BitsPerPixel { Pixel12, Pixel16, Pixel16M, Pixel18 };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
@@ -66,6 +67,9 @@ void pre_st7789_transfer(const struct St7789Internals* st7789_driver, enum TxCmd
 
 void set_screen_size(struct St7789Size* screen_size, unsigned int x, unsigned int y);
 
+void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , enum BitsPerPixel bpp);
 void st7789_hw_reset(struct St7789Internals* st7789_driver);
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg

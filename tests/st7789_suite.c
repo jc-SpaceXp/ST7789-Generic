@@ -43,6 +43,11 @@ struct LoopTestSt7789Modes {
 	struct St7789Modes expected_modes;
 };
 
+struct LoopTestSt7789ColourFormats {
+	enum BitsPerPixel bpp;
+	uint8_t tx_expected;
+};
+
 
 static void init_st7789_modes_from_struct(struct St7789Modes* st7789_dest
                                          , struct St7789Modes st7789_src)
@@ -456,6 +461,38 @@ TEST test_st7789_commands_with_four_args(void)
 	PASS();
 }
 
+TEST st7789_set_bits_per_pixel_format(const struct LoopTestSt7789ColourFormats* st7789_colour)
+{
+	// COLMOD bits D3-D0 will only be set
+	st7789_set_input_colour_format(&some_st7789, &some_spi_data_reg, st7789_colour->bpp);
+
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 2);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x3A); // COLMOD
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[1], st7789_colour->tx_expected);
+	PASS();
+}
+
+void loop_test_all_bits_per_pixel_formats(void)
+{
+	const struct LoopTestSt7789ColourFormats st7789_bpp[4] = {
+		{ Pixel18,  0x06 } // D3-D0: 0110
+		, { Pixel12, 0x03 } // D3-D0: 0011
+		, { Pixel16, 0x05 } // D3-D0: 0101
+		, { Pixel16M, 0x07 } // D3-D0: 0111
+	};
+
+	for (int i = 0; i < 4; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(st7789_set_bits_per_pixel_format, &st7789_bpp[i]);
+	}
+}
+
 TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 {
 	// CASET and RASET would have been called before
@@ -527,6 +564,7 @@ SUITE(st7789_driver)
 	RUN_TEST(st7789_transition_display_on_to_off);
 	RUN_TEST(test_st7789_commands_with_one_arg);
 	RUN_TEST(test_st7789_commands_with_four_args);
+	loop_test_all_bits_per_pixel_formats();
 	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 }

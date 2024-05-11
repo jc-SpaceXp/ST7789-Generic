@@ -129,6 +129,28 @@ void set_screen_size(struct St7789Size* screen_size, unsigned int x, unsigned in
 	screen_size->y = y;
 }
 
+void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , enum BitsPerPixel bpp)
+{
+	// input RGB is converted in st7889 via a LUT to display an output colour
+	// typically the LUT is for the 18-bit output (18 on reset for both input/output)
+	// input is refered to as the colour interface in the datasheet
+	uint8_t data = 0;
+	if (bpp == Pixel18) {
+		data |= 0x06;
+	} else if (bpp == Pixel16) {
+		data |= 0x05;
+	} else if (bpp == Pixel16M) {
+		data |= 0x07;
+	} else if (bpp == Pixel12) {
+		data |= 0x03;
+	}
+
+	st7789_send_command(st7789_driver, spi_tx_reg, COLMOD);
+	st7789_send_data(st7789_driver, spi_tx_reg, data);
+}
+
 void st7789_hw_reset(struct St7789Internals* st7789_driver)
 {
 	// Must be a hi-lo transition, pulse RES for 10us minimum
