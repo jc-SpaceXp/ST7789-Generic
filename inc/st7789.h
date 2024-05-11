@@ -93,5 +93,8 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , volatile uint32_t* spi_tx_reg
                          , enum InitInversion invert
                          , enum SetScreenRegion screen_region);
+void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , uint8_t* colour_args);
 
 #endif /* ST7789_H */

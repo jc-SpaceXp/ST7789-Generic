@@ -470,7 +470,7 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
                              , st7789_6bit_colour_index_to_byte(g_col)
                              , st7789_6bit_colour_index_to_byte(b_col) };
-	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3, TxPause);
+	st7789_set_18_bit_pixel_colour(&some_st7789, &some_spi_data_reg, colour_args);
 
 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 3);
