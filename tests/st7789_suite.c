@@ -414,10 +414,10 @@ void loop_test_all_transitions(void)
 void loop_test_all_init_possibilities(void)
 {
 	const struct LoopTestSt7789Init st7789_init[4] = {
-		{ {InvertOff, Ignore},      { {INVON, false}, {CASET, false}, {RASET, false} } }
-		, { {InvertOn, Ignore},     { {INVON, true}, {CASET, false}, {RASET, false} } }
-		, { {InvertOff, SetRegion}, { {INVON, false}, {CASET, true}, {RASET, true} } }
-		, { {InvertOn, SetRegion},  { {INVON, true}, {CASET, true}, {RASET, true} } }
+		{ {InvertOff, IgnoreRegion},  { {INVON, false}, {CASET, false}, {RASET, false} } }
+		, { {InvertOn, IgnoreRegion}, { {INVON, true}, {CASET, false}, {RASET, false} } }
+		, { {InvertOff, SetRegion},   { {INVON, false}, {CASET, true}, {RASET, true} } }
+		, { {InvertOn, SetRegion},    { {INVON, true}, {CASET, true}, {RASET, true} } }
 	};
 
 	for (int i = 0; i < 4; ++i) {

@@ -40,7 +40,7 @@ enum TxContinueOrPause { TxPause, TxContinue };
 enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
 enum InitInversion { InvertOff, InvertOn };
-enum SetScreenRegion { Ignore, SetRegion };
+enum SetScreenRegion { IgnoreRegion, SetRegion };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
