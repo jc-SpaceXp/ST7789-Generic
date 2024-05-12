@@ -324,3 +324,15 @@ void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
 {
 	st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
 }
+
+void st7789_fill_screen(struct St7789Internals* st7789_driver
+                       , volatile uint32_t* spi_tx_reg
+                       , uint8_t* colour_args)
+{
+	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
+	for (int y = 0; y < (int) st7789_driver->screen_size.y; ++y) {
+		for (int x = 0; x < (int) st7789_driver->screen_size.x; ++x) {
+			st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
+		}
+	}
+}

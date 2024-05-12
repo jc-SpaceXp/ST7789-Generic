@@ -48,6 +48,21 @@ struct LoopTestSt7789ColourFormats {
 	uint8_t tx_expected;
 };
 
+struct LoopTestSt7789FillColour {
+	struct Inputs {
+		struct Pixels {
+			unsigned int total_x;
+			unsigned int total_y;
+		} pixels;
+		struct RawRgbInput {
+			uint8_t red;
+			uint8_t green;
+			uint8_t blue;
+		} rgb;
+	} input;
+	unsigned int starting_block_index;
+};
+
 
 static void init_st7789_modes_from_struct(struct St7789Modes* st7789_dest
                                          , struct St7789Modes st7789_src)
@@ -557,6 +572,57 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 	PASS();
 }
 
+TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour* st7789_fill)
+{
+	// For 18-bit colour the 666 RGB format will be sent over as 3 bytes
+	// with each colour having the lowest two bits padded with zero's
+	unsigned int starting_block = st7789_fill->starting_block_index;
+	set_screen_size(&some_st7789.screen_size
+	               , st7789_fill->input.pixels.total_x
+	               , st7789_fill->input.pixels.total_y);
+	unsigned int total_pixels = st7789_fill->input.pixels.total_x
+	                            * st7789_fill->input.pixels.total_y;
+	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.red)
+                             , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.green)
+                             , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.blue) };
+	st7789_fill_screen(&some_st7789, &some_spi_data_reg, colour_args);
+
+	ASSERT_EQ_FMT(3 * total_pixels + 1, trigger_spi_byte_transfer_fake.call_count, "%u");
+	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
+	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
+	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
+	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], RAMWRC);
+	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], some_st7789.csx.pin); // CS is pulled high, expected (command)
+	CHECK_CALL(check_repeated_tx_data(starting_block, colour_args, 3));
+	PASS();
+}
+
+void loop_test_st7789_fill_screen(void)
+{
+	unsigned int x_pixels = 8;
+	unsigned int y_pixels = 2;
+	unsigned int r_col = 0x36; // 11 0110: 6 --> 1101 1000 8 bits
+	unsigned int g_col = 0x0F; // 00 1111: 6 --> 0011 1100 8 bits
+	unsigned int b_col = 0xC1; // 00 0001: 6 --> 0000 0100 8 bits
+
+	unsigned int total_pixels = x_pixels * y_pixels;
+
+	for (unsigned int i = 0; i < total_pixels; ++i) {
+		const struct LoopTestSt7789FillColour st7789_fill = {
+			{{x_pixels, y_pixels}, {r_col, g_col, b_col}}, i * 3 + 1
+		};
+		char test_suffix[12];
+		int sn = snprintf(test_suffix, 12, "block_%u", i);
+		bool sn_error = (sn > 13) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_st7789_fill_screen_18_bit_colour, &st7789_fill);
+	}
+}
+
 
 SUITE(st7789_driver)
 {
@@ -577,6 +643,7 @@ SUITE(st7789_driver)
 	loop_test_all_bits_per_pixel_formats();
 	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
+	loop_test_st7789_fill_screen();
 }
 
 SUITE(st7789_driver_modes_transitions)
