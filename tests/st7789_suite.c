@@ -211,6 +211,18 @@ static enum greatest_test_res tx_byte_was_sent(uint8_t tx_byte, bool expected)
 	PASS();
 }
 
+static enum greatest_test_res check_repeated_tx_data(unsigned int start
+                                                    , uint8_t* expected_stream
+                                                    , unsigned int length)
+{
+	for (unsigned int i = 0; i < length; ++i) {
+		ASSERT_EQ_FMT(expected_stream[i]
+		             , trigger_spi_byte_transfer_fake.arg1_history[start + i]
+		             , "%.2X");
+	}
+	PASS();
+}
+
 TEST snprintf_return_val(bool sn_error)
 {
 	ASSERT_FALSE(sn_error);
@@ -499,6 +511,7 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	unsigned int r_col = 0x14; // 01 0100: 6 --> 0101 0000 8 bits
 	unsigned int g_col = 0x0A; // 00 1010: 6 --> 0010 1000 8 bits
 	unsigned int b_col = 0x85; // 00 0101: 6 --> 0001 0100 8 bits
+	uint8_t expected_data[3] = { 0x50, 0x28, 0x14 };
 	// 01 0100 0010 1000 0101: 0x14285
 	unsigned int frame_18_bit_col = (r_col << 12) | (g_col << 6) | b_col;
 	ASSERT_EQ(frame_18_bit_col, 0x14285); // what the internal frame mem should read (666 RGB)
@@ -511,9 +524,7 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 
 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 3);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x50);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[1], 0x28);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[2], 0x14);
+	CHECK_CALL(check_repeated_tx_data(0, expected_data, 3));
 	PASS();
 }
 
@@ -523,6 +534,7 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 	unsigned int r_col = 0x14; // 01 0100: 6 --> 0101 0000 8 bits
 	unsigned int g_col = 0x0A; // 00 1010: 6 --> 0010 1000 8 bits
 	unsigned int b_col = 0x85; // 00 0101: 6 --> 0001 0100 8 bits
+	uint8_t expected_data[3] = { 0x50, 0x28, 0x14 };
 	// 01 0100 0010 1000 0101: 0x14285
 	unsigned int frame_18_bit_col = (r_col << 12) | (g_col << 6) | b_col;
 	ASSERT_EQ(frame_18_bit_col, 0x14285); // what the internal frame mem should read (666 RGB)
@@ -539,9 +551,7 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 	ASSERT_EQ_FMT(trigger_spi_byte_transfer_fake.call_count, 3 * total_args, "%u");
 	ASSERT_EQ(assert_spi_pin_fake.call_count, total_args); // DCX line only
 	for (unsigned int i = 0; i < total_args; ++i) {
-		ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[i * 3], 0x50);       // 0
-		ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[(i * 3) + 1], 0x28); // 1
-		ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[(i * 3) + 2], 0x14); // 2
+		CHECK_CALL(check_repeated_tx_data(i * 3, expected_data, 3));
 		ASSERT_NEQ(assert_spi_pin_fake.arg1_history[i], 15); // CS should still be low
 	}
 	PASS();
