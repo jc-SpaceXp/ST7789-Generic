@@ -565,6 +565,10 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 
 	ASSERT_EQ_FMT(trigger_spi_byte_transfer_fake.call_count, 3 * total_args, "%u");
 	ASSERT_EQ(assert_spi_pin_fake.call_count, total_args); // DCX line only
+	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
+	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
+	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
+	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
 	for (unsigned int i = 0; i < total_args; ++i) {
 		CHECK_CALL(check_repeated_tx_data(i * 3, expected_data, 3));
 		ASSERT_NEQ(assert_spi_pin_fake.arg1_history[i], 15); // CS should still be low
