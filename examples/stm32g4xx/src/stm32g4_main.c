@@ -36,7 +36,7 @@ int main (void)
 	};
 	init_st7789_callbacks(&st7789.user_defined, &st7789_callbacks);
 
-	St7789Size init_xy_size = { 240, 320 };
+	struct St7789Size init_xy_size = { 240, 320 };
 
 	// write a colour to the whole screen, converted to RGB 666
 	struct RawRgbInput rgb = { 170, 128, 255 };
