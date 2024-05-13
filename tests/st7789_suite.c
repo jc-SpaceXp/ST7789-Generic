@@ -28,13 +28,14 @@ struct LoopTestSt7789Init {
 	struct {
 		enum InitInversion invert;
 		enum FillScreenRegion screen_region;
+		struct RawRgbInput rgb;
 	};
 	// INVON, CASET, RASET
-	// (SWRESET and SLPOUT are always called hence not needed here)
+	// (SWRESET, SLPOUT, DISPON are always called hence not needed here)
 	struct St7789ExpectedTx {
 		uint8_t tx_byte;
 		bool tx_expected;
-	} tx[3];
+	} tx[4];
 };
 
 struct LoopTestSt7789Modes {
@@ -54,11 +55,7 @@ struct LoopTestSt7789FillColour {
 			unsigned int total_x;
 			unsigned int total_y;
 		} pixels;
-		struct RawRgbInput {
-			uint8_t red;
-			uint8_t green;
-			uint8_t blue;
-		} rgb;
+		struct RawRgbInput rgb;
 	} input;
 	unsigned int starting_block_index;
 };
@@ -311,20 +308,25 @@ TEST test_st7789_screen_size(void)
 
 TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 {
-	unsigned int x_width = 320;
-	unsigned int y_width = 240;
-	set_screen_size(&some_st7789_size, x_width, y_width);
+	unsigned int x_width = 4;
+	unsigned int y_width = 2;
+	set_screen_size(&some_st7789.screen_size, x_width, y_width);
 	st7789_init_sequence(&some_st7789, &some_spi_data_reg
-	                    , st7789_init->invert, st7789_init->screen_region);
+	                    , st7789_init->invert, st7789_init->screen_region, st7789_init->rgb);
 
+	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
+	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
+	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
+	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
 	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
 	CHECK_CALL(check_command_arg_history(1));
 	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
-	for (int i = 0; i < 3; ++i) { // tx struct array size is 3
-		// INVON, CASET, RASET
+	CHECK_CALL(tx_byte_was_sent(DISPON, true));
+	for (int i = 0; i < 4; ++i) { // tx struct array size is 4
+		// INVON, CASET, RASET, RAMWRC
 		CHECK_CALL(tx_byte_was_sent(st7789_init->tx[i].tx_byte, st7789_init->tx[i].tx_expected));
 	}
 	PASS();
@@ -445,11 +447,19 @@ void loop_test_all_transitions(void)
 
 void loop_test_all_init_possibilities(void)
 {
+	struct RawRgbInput rgb = { 1, 2, 3 };
 	const struct LoopTestSt7789Init st7789_init[4] = {
-		{ {InvertOff, IgnoreRegion},  { {INVON, false}, {CASET, false}, {RASET, false} } }
-		, { {InvertOn, IgnoreRegion}, { {INVON, true}, {CASET, false}, {RASET, false} } }
-		, { {InvertOff, FillRegion},  { {INVON, false}, {CASET, true}, {RASET, true} } }
-		, { {InvertOn, FillRegion},   { {INVON, true}, {CASET, true}, {RASET, true} } }
+		{ {InvertOff, IgnoreRegion, rgb}
+		  , { {INVON, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+
+		, { {InvertOn, IgnoreRegion, rgb}
+		  , { {INVON, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+
+		, { {InvertOff, FillRegion, rgb}
+		  , { {INVON, false}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+
+		, { {InvertOn, FillRegion, rgb}
+		  , { {INVON, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
 	};
 
 	for (int i = 0; i < 4; ++i) {

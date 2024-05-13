@@ -261,7 +261,8 @@ void st7789_power_on_sequence(struct St7789Internals* st7789_driver
 void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , volatile uint32_t* spi_tx_reg
                          , enum InitInversion invert
-                         , enum FillScreenRegion screen_region)
+                         , enum FillScreenRegion screen_region
+                         , struct RawRgbInput rgb)
 {
 	void delay_ms(unsigned int ms_delay) {
 		st7789_driver->user_defined.delay_us(1000 * ms_delay);
@@ -281,7 +282,15 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
 		unsigned int x_start = 0;
 		unsigned int x_end = st7789_driver->screen_size.x - 1;
 		st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end);
+
+		// Assumes 18-bit colour for now
+		uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(rgb.red)
+		                         , st7789_6bit_colour_index_to_byte(rgb.green)
+		                         , st7789_6bit_colour_index_to_byte(rgb.blue) };
+		st7789_fill_screen(st7789_driver, spi_tx_reg, colour_args);
 	}
+
+	st7789_send_command(st7789_driver, spi_tx_reg, DISPON);
 }
 
 static void st7789_set_x_or_y_region(struct St7789Internals* st7789_driver

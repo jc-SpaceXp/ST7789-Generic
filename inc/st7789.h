@@ -26,6 +26,11 @@
 #define WRMEMC  0x3C
 #define RAMWRC  WRMEMC
 
+struct RawRgbInput {
+	unsigned int red;
+	unsigned int green;
+	unsigned int blue;
+};
 
 struct St7789SpiPin;
 struct St7789Modes;
@@ -97,7 +102,8 @@ void st7789_power_on_sequence(struct St7789Internals* st7789_driver
 void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , volatile uint32_t* spi_tx_reg
                          , enum InitInversion invert
-                         , enum FillScreenRegion screen_region);
+                         , enum FillScreenRegion screen_region
+                         , struct RawRgbInput rgb);
 void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
                                    , volatile uint32_t* spi_tx_reg
                                    , uint8_t* colour_args);
