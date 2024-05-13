@@ -612,11 +612,12 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	// For 18-bit colour the 666 RGB format will be sent over as 3 bytes
 	// with each colour having the lowest two bits padded with zero's
 	unsigned int starting_block = st7789_fill->starting_block_index;
-	set_screen_size(&some_st7789.screen_size
-	               , st7789_fill->input.pixels.total_x
-	               , st7789_fill->input.pixels.total_y);
-	unsigned int total_pixels = st7789_fill->input.pixels.total_x
-	                            * st7789_fill->input.pixels.total_y;
+	unsigned int x_pixels = st7789_fill->input.pixels.total_x;
+	unsigned int y_pixels = st7789_fill->input.pixels.total_y;
+	set_screen_size(&some_st7789.screen_size, x_pixels, y_pixels);
+	unsigned int total_pixels = x_pixels * y_pixels;
+	unsigned int raset_cmd_index = 0;
+	unsigned int caset_cmd_index = 5;
 	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.red)
                              , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.green)
                              , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.blue) };
@@ -628,13 +629,13 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], RASET);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[5], CASET);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[raset_cmd_index], RASET);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[caset_cmd_index], CASET);
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[10], RAMWRC);
-	CHECK_CALL(check_raset_caset_args(0, 0, Start)); // Raset
-	CHECK_CALL(check_raset_caset_args(0, 1, End)); // Raset
-	CHECK_CALL(check_raset_caset_args(5, 0, Start)); // Caset
-	CHECK_CALL(check_raset_caset_args(5, 5, End)); // Caset
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, 0, Start));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, x_pixels - 1, End));
 	CHECK_CALL(check_repeated_tx_data(starting_block + 10, colour_args, 3));
 	PASS();
 }
