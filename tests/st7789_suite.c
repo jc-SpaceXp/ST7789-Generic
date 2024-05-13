@@ -256,17 +256,17 @@ static enum greatest_test_res check_raset_caset_args(unsigned int start
 	PASS();
 }
 
-static int command_to_arg_data_index(uint8_t command_id)
+static int get_first_command_id_index(uint8_t command_id)
 {
-	int first_data_index = -5;
+	int first_cmd_index = -5;
 	for (int i = 0; i < (int) trigger_spi_byte_transfer_fake.call_count; ++i) {
 		if (trigger_spi_byte_transfer_fake.arg1_history[i] == command_id) {
-			first_data_index = i + 1;
+			first_cmd_index = i;
 			break;
 		}
 	}
 
-	return first_data_index;
+	return first_cmd_index;
 }
 
 TEST snprintf_return_val(bool sn_error)
@@ -643,9 +643,9 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
-	int raset_cmd_index = command_to_arg_data_index(RASET) - 1;
-	int caset_cmd_index = command_to_arg_data_index(CASET) - 1;
-	int ramwrc_cmd_index = command_to_arg_data_index(RAMWRC) - 1;
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	int ramwrc_cmd_index = get_first_command_id_index(RAMWRC);
 	ASSERTm("RASET not called?", raset_cmd_index != -5);
 	ASSERTm("CASET not called?", caset_cmd_index != -5);
 	ASSERTm("RAMWRC must be called after RASET", ramwrc_cmd_index > raset_cmd_index);
