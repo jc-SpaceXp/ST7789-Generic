@@ -648,9 +648,8 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	int ramwrc_cmd_index = command_to_arg_data_index(RAMWRC) - 1;
 	ASSERTm("RASET not called?", raset_cmd_index != -5);
 	ASSERTm("CASET not called?", caset_cmd_index != -5);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[raset_cmd_index], RASET);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[caset_cmd_index], CASET);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[ramwrc_cmd_index], RAMWRC);
+	ASSERTm("RAMWRC must be called after RASET", ramwrc_cmd_index > raset_cmd_index);
+	ASSERTm("RAMWRC must be called after CASET", ramwrc_cmd_index > caset_cmd_index);
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
