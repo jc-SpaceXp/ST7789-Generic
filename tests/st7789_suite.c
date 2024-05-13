@@ -208,7 +208,7 @@ static enum greatest_test_res check_command_arg_history(unsigned int start)
 
 static enum greatest_test_res check_data_call_history(unsigned int start)
 {
-	// CS must aldo be pulled low when a data needs to be sent or recieved
+	// CS must also be pulled low when a data needs to be sent or recieved
 	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[start]); // DC/X
 	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[start + 1]); // CS
 	ASSERT_EQ((void*) trigger_spi_byte_transfer, fff.call_history[start + 2]);
