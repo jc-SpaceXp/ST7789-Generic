@@ -332,12 +332,14 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , uint8_t* colour_args)
 {
 	// set_screen_size() must be called before
+	// RASET/CASET require a -1 as they are zero indexed
+	// e.g. 240 pixels would be 0-239
 	unsigned int y_start = 0;
 	unsigned int y_end = st7789_driver->screen_size.y;
-	st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end);
+	st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end - 1);
 	unsigned int x_start = 0;
 	unsigned int x_end = st7789_driver->screen_size.x;
-	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end);
+	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end - 1);
 
 	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
 	for (int y = 0; y < (int) y_end; ++y) {

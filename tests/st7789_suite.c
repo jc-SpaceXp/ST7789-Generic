@@ -60,6 +60,8 @@ struct LoopTestSt7789FillColour {
 	unsigned int starting_block_index;
 };
 
+enum RasetCasetStartOrEnd { Start, End };
+
 
 static void init_st7789_modes_from_struct(struct St7789Modes* st7789_dest
                                          , struct St7789Modes st7789_src)
@@ -232,6 +234,25 @@ static enum greatest_test_res check_repeated_tx_data(unsigned int start
 		             , trigger_spi_byte_transfer_fake.arg1_history[start + i]
 		             , "%.2X");
 	}
+	PASS();
+}
+
+static enum greatest_test_res check_raset_caset_args(unsigned int start
+                                                    , uint8_t expected_byte
+                                                    , enum RasetCasetStartOrEnd start_or_end)
+{
+	unsigned int arg_offset = 1; // args are after command
+	if (start_or_end == End) {
+		arg_offset += 2;
+	}
+
+	// Each arg is split into upper and lower byte
+	// args[0-3]: upper(start), lower(start), upper(end), lower(end)
+	uint8_t tx_arg = 0;
+	tx_arg |= trigger_spi_byte_transfer_fake.arg1_history[start + arg_offset] << 8;
+	tx_arg |= trigger_spi_byte_transfer_fake.arg1_history[start + arg_offset + 1];
+
+	ASSERT_EQ_FMT(expected_byte, tx_arg, "%.2X");
 	PASS();
 }
 
@@ -610,6 +631,10 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], RASET);
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[5], CASET);
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[10], RAMWRC);
+	CHECK_CALL(check_raset_caset_args(0, 0, Start)); // Raset
+	CHECK_CALL(check_raset_caset_args(0, 1, End)); // Raset
+	CHECK_CALL(check_raset_caset_args(5, 0, Start)); // Caset
+	CHECK_CALL(check_raset_caset_args(5, 5, End)); // Caset
 	CHECK_CALL(check_repeated_tx_data(starting_block + 10, colour_args, 3));
 	PASS();
 }
