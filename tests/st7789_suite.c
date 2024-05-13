@@ -225,10 +225,20 @@ static enum greatest_test_res check_spi_pins_data_arg_history(unsigned int start
 	PASS();
 }
 
-static enum greatest_test_res check_data_spi_behaviour(unsigned int start)
+static enum greatest_test_res check_data_initial_spi_behaviour(unsigned int start)
 {
 	CHECK_CALL(check_data_call_history(start));
 	CHECK_CALL(check_spi_pins_data_arg_history(start));
+	PASS();
+}
+
+static enum greatest_test_res check_data_tx_paused(unsigned int data_start
+                                                  , unsigned int previous_spi_tx_calls)
+{
+	// DC/X already lo, CS/X already lo (+2 below)
+	// +X previous spi tx calls
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[data_start + 2 + previous_spi_tx_calls]);
+	ASSERT_EQ(some_st7789.csx.pin, assert_spi_pin_fake.arg1_history[data_start + 1]);
 	PASS();
 }
 
@@ -541,9 +551,11 @@ void loop_test_all_init_possibilities(void)
 TEST test_st7789_commands_with_one_arg(void)
 {
 	unsigned int previous_commands = 0;
+	unsigned int spi_tx_transfers = 1;
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
-	CHECK_CALL(check_data_spi_behaviour(previous_commands));
+	CHECK_CALL(check_data_initial_spi_behaviour(previous_commands));
+	CHECK_CALL(check_data_tx_paused(previous_commands, spi_tx_transfers));
 
 	PASS();
 }
@@ -552,13 +564,15 @@ TEST test_st7789_commands_with_four_args(void)
 {
 	unsigned int cols = 60;
 	unsigned int cole = 69;
+	unsigned int previous_commands = 0;
+	unsigned int spi_tx_transfers = 4;
 	uint8_t caset_args[4] = {get_upper_byte(cols), get_lower_byte(cols)
 	                        ,get_upper_byte(cole), get_lower_byte(cole)};
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 4, TxPause);
 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 4);
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
-
+	CHECK_CALL(check_data_initial_spi_behaviour(previous_commands));
+	CHECK_CALL(check_data_tx_paused(previous_commands, spi_tx_transfers));
 	PASS();
 }
 
