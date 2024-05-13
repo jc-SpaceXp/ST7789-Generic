@@ -206,6 +206,25 @@ static enum greatest_test_res check_command_arg_history(unsigned int start)
 	PASS();
 }
 
+static enum greatest_test_res check_data_call_history(unsigned int start)
+{
+	// CS must aldo be pulled low when a data needs to be sent or recieved
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[start]); // DC/X
+	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[start + 1]); // CS
+	ASSERT_EQ((void*) trigger_spi_byte_transfer, fff.call_history[start + 2]);
+	PASS();
+}
+
+static enum greatest_test_res check_spi_pins_data_arg_history(unsigned int start)
+{
+	// DC/X needs to be pulled hi for commands
+	// CS is also pulled lo to inidacte the beggining of a transfer
+	ASSERT_EQ(some_st7789.dcx.pin, assert_spi_pin_fake.arg1_history[start]);
+	ASSERT_EQ(some_st7789.dcx.assert_addr, assert_spi_pin_fake.arg0_history[start]);
+	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[start]);
+	PASS();
+}
+
 static enum greatest_test_res check_tx_byte(uint8_t tx_byte, unsigned int start)
 {
 	ASSERT_EQ(tx_byte, trigger_spi_byte_transfer_fake.arg1_history[start]);
@@ -268,6 +287,7 @@ static int get_first_command_id_index(uint8_t command_id)
 
 	return first_cmd_index;
 }
+
 
 TEST snprintf_return_val(bool sn_error)
 {
@@ -513,10 +533,11 @@ void loop_test_all_init_possibilities(void)
 
 TEST test_st7789_commands_with_one_arg(void)
 {
+	unsigned int previous_commands = 0;
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
-	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin); // DC/X high for data
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
+	CHECK_CALL(check_data_call_history(previous_commands));
+	CHECK_CALL(check_spi_pins_data_arg_history(previous_commands));
 
 	PASS();
 }
