@@ -262,11 +262,13 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , volatile uint32_t* spi_tx_reg
                          , enum InitInversion invert
                          , enum FillScreenRegion screen_region
+                         , struct St7789Size init_size
                          , struct RawRgbInput rgb)
 {
 	void delay_ms(unsigned int ms_delay) {
 		st7789_driver->user_defined.delay_us(1000 * ms_delay);
 	}
+	set_screen_size(&st7789_driver->screen_size, init_size.x, init_size.y);
 	// Initial modes are:
 	// SPLIN, DISPOFF, NORMAL MODE, IDLE OFF
 	st7789_power_on_sequence(st7789_driver, spi_tx_reg);

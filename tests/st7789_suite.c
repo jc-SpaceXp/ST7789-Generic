@@ -329,16 +329,19 @@ TEST test_st7789_screen_size(void)
 
 TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 {
-	unsigned int x_width = 4;
-	unsigned int y_width = 2;
-	set_screen_size(&some_st7789.screen_size, x_width, y_width);
+	struct St7789Size init_xy_size = { 4, 2 };
 	st7789_init_sequence(&some_st7789, &some_spi_data_reg
-	                    , st7789_init->invert, st7789_init->screen_region, st7789_init->rgb);
+	                    , st7789_init->invert
+	                    , st7789_init->screen_region
+	                    , init_xy_size
+	                    , st7789_init->rgb);
 
 	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
+	ASSERT_EQ_FMT(init_xy_size.x, some_st7789.screen_size.x, "%u");
+	ASSERT_EQ_FMT(init_xy_size.y, some_st7789.screen_size.y, "%u");
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
 	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
