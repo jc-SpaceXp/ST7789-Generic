@@ -196,7 +196,7 @@ static enum greatest_test_res check_command_call_history(unsigned int start)
 	PASS();
 }
 
-static enum greatest_test_res check_command_arg_history(unsigned int start)
+static enum greatest_test_res check_spi_pins_command_arg_history(unsigned int start)
 {
 	// DC/X needs to be pulled lo for commands
 	// CS is also pulled lo to inidacte the beggining of a transfer
@@ -348,7 +348,7 @@ TEST test_st7789_sw_reset(void)
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 
 	CHECK_CALL(check_command_call_history(previous_commands));
-	CHECK_CALL(check_command_arg_history(previous_commands));
+	CHECK_CALL(check_spi_pins_command_arg_history(previous_commands));
 	CHECK_CALL(check_tx_byte(0x01, previous_commands)); // 0x01 == SW Reset command
 	PASS();
 }
@@ -361,7 +361,7 @@ TEST test_st7789_power_on_sequence(void)
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
 	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
-	CHECK_CALL(check_command_arg_history(1));
+	CHECK_CALL(check_spi_pins_command_arg_history(1));
 	CHECK_CALL(check_tx_byte(0x01, previous_tx_commands)); // 0x01 == SW Reset command
 	PASS();
 }
@@ -395,7 +395,7 @@ TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
 	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
-	CHECK_CALL(check_command_arg_history(1));
+	CHECK_CALL(check_spi_pins_command_arg_history(1));
 	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
 	CHECK_CALL(tx_byte_was_sent(DISPON, true));
