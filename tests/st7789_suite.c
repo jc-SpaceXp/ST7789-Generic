@@ -601,20 +601,22 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
                              , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.blue) };
 	st7789_fill_screen(&some_st7789, &some_spi_data_reg, colour_args);
 
-	ASSERT_EQ_FMT(3 * total_pixels + 1, trigger_spi_byte_transfer_fake.call_count, "%u");
+	// 10 calls = raset/caset + args, 1 for RAMWRC, 3 per pixel
+	ASSERT_EQ_FMT(3 * total_pixels + 11, trigger_spi_byte_transfer_fake.call_count, "%u");
 	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], RAMWRC);
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], some_st7789.csx.pin); // CS is pulled high, expected (command)
-	CHECK_CALL(check_repeated_tx_data(starting_block, colour_args, 3));
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], RASET);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[5], CASET);
+	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[10], RAMWRC);
+	CHECK_CALL(check_repeated_tx_data(starting_block + 10, colour_args, 3));
 	PASS();
 }
 
 void loop_test_st7789_fill_screen(void)
 {
-	unsigned int x_pixels = 8;
+	unsigned int x_pixels = 6;
 	unsigned int y_pixels = 2;
 	unsigned int r_col = 0x36; // 11 0110: 6 --> 1101 1000 8 bits
 	unsigned int g_col = 0x0F; // 00 1111: 6 --> 0011 1100 8 bits

@@ -276,13 +276,6 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
 	if (invert == InvertOn) { st7789_send_command(st7789_driver, spi_tx_reg, INVON); }
 	// Set screen size and set a colour
 	if (screen_region == FillRegion) {
-		unsigned int y_start = 0;
-		unsigned int y_end = st7789_driver->screen_size.y - 1;
-		st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end);
-		unsigned int x_start = 0;
-		unsigned int x_end = st7789_driver->screen_size.x - 1;
-		st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end);
-
 		// Assumes 18-bit colour for now
 		uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(rgb.red)
 		                         , st7789_6bit_colour_index_to_byte(rgb.green)
@@ -338,9 +331,17 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
                        , uint8_t* colour_args)
 {
+	// set_screen_size() must be called before
+	unsigned int y_start = 0;
+	unsigned int y_end = st7789_driver->screen_size.y;
+	st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end);
+	unsigned int x_start = 0;
+	unsigned int x_end = st7789_driver->screen_size.x;
+	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end);
+
 	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
-	for (int y = 0; y < (int) st7789_driver->screen_size.y; ++y) {
-		for (int x = 0; x < (int) st7789_driver->screen_size.x; ++x) {
+	for (int y = 0; y < (int) y_end; ++y) {
+		for (int x = 0; x < (int) x_end; ++x) {
 			st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
 		}
 	}
