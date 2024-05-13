@@ -27,7 +27,7 @@ static struct St7789Size some_st7789_size;
 struct LoopTestSt7789Init {
 	struct {
 		enum InitInversion invert;
-		enum SetScreenRegion screen_region;
+		enum FillScreenRegion screen_region;
 	};
 	// INVON, CASET, RASET
 	// (SWRESET and SLPOUT are always called hence not needed here)
@@ -448,8 +448,8 @@ void loop_test_all_init_possibilities(void)
 	const struct LoopTestSt7789Init st7789_init[4] = {
 		{ {InvertOff, IgnoreRegion},  { {INVON, false}, {CASET, false}, {RASET, false} } }
 		, { {InvertOn, IgnoreRegion}, { {INVON, true}, {CASET, false}, {RASET, false} } }
-		, { {InvertOff, SetRegion},   { {INVON, false}, {CASET, true}, {RASET, true} } }
-		, { {InvertOn, SetRegion},    { {INVON, true}, {CASET, true}, {RASET, true} } }
+		, { {InvertOff, FillRegion},  { {INVON, false}, {CASET, true}, {RASET, true} } }
+		, { {InvertOn, FillRegion},   { {INVON, true}, {CASET, true}, {RASET, true} } }
 	};
 
 	for (int i = 0; i < 4; ++i) {

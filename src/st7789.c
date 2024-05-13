@@ -261,7 +261,7 @@ void st7789_power_on_sequence(struct St7789Internals* st7789_driver
 void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , volatile uint32_t* spi_tx_reg
                          , enum InitInversion invert
-                         , enum SetScreenRegion screen_region)
+                         , enum FillScreenRegion screen_region)
 {
 	void delay_ms(unsigned int ms_delay) {
 		st7789_driver->user_defined.delay_us(1000 * ms_delay);
@@ -274,7 +274,7 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
 	// Optionally invert screen, necessary for some screens to display correct colour
 	if (invert == InvertOn) { st7789_send_command(st7789_driver, spi_tx_reg, INVON); }
 	// Set screen size and set a colour
-	if (screen_region == SetRegion) {
+	if (screen_region == FillRegion) {
 		unsigned int y_start = 0;
 		unsigned int y_end = st7789_driver->screen_size.y - 1;
 		st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end);

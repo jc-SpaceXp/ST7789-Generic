@@ -26,6 +26,7 @@
 #define WRMEMC  0x3C
 #define RAMWRC  WRMEMC
 
+
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
@@ -40,7 +41,7 @@ enum TxContinueOrPause { TxPause, TxContinue };
 enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
 enum InitInversion { InvertOff, InvertOn };
-enum SetScreenRegion { IgnoreRegion, SetRegion };
+enum FillScreenRegion { IgnoreRegion, FillRegion };
 enum BitsPerPixel { Pixel12, Pixel16, Pixel16M, Pixel18 };
 
 // CASET and RASET should use these funcions
@@ -96,7 +97,7 @@ void st7789_power_on_sequence(struct St7789Internals* st7789_driver
 void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , volatile uint32_t* spi_tx_reg
                          , enum InitInversion invert
-                         , enum SetScreenRegion screen_region);
+                         , enum FillScreenRegion screen_region);
 void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
                                    , volatile uint32_t* spi_tx_reg
                                    , uint8_t* colour_args);
