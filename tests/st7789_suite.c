@@ -217,7 +217,7 @@ static enum greatest_test_res check_data_call_history(unsigned int start)
 
 static enum greatest_test_res check_spi_pins_data_arg_history(unsigned int start)
 {
-	// DC/X needs to be pulled hi for commands
+	// DC/X needs to be pulled hi for data
 	// CS is also pulled lo to inidacte the beggining of a transfer
 	ASSERT_EQ(some_st7789.dcx.pin, assert_spi_pin_fake.arg1_history[start]);
 	ASSERT_EQ(some_st7789.dcx.assert_addr, assert_spi_pin_fake.arg0_history[start]);
@@ -235,7 +235,7 @@ static enum greatest_test_res check_data_initial_spi_behaviour(unsigned int star
 static enum greatest_test_res check_data_tx_paused(unsigned int data_start
                                                   , unsigned int previous_spi_tx_calls)
 {
-	// DC/X already lo, CS/X already lo (+2 below)
+	// DC/X already hi, CS/X already lo (+2 below)
 	// +X previous spi tx calls
 	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[data_start + 2 + previous_spi_tx_calls]);
 	ASSERT_EQ(some_st7789.csx.pin, assert_spi_pin_fake.arg1_history[data_start + 1]);
