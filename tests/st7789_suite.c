@@ -186,7 +186,7 @@ static enum greatest_test_res check_hw_reset_arg_history(void)
 	PASS();
 }
 
-static enum greatest_test_res check_command_call_history(unsigned int start)
+static enum greatest_test_res check_spi_pins_command_call_history(unsigned int start)
 {
 	// CS must aldo be pulled low when a data needs to be sent or recieved
 	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[start]); // DC/X
@@ -206,7 +206,7 @@ static enum greatest_test_res check_spi_pins_command_arg_history(unsigned int st
 	PASS();
 }
 
-static enum greatest_test_res check_data_call_history(unsigned int start)
+static enum greatest_test_res check_spi_pins_data_call_history(unsigned int start)
 {
 	// CS must also be pulled low when a data needs to be sent or recieved
 	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[start]); // DC/X
@@ -227,7 +227,7 @@ static enum greatest_test_res check_spi_pins_data_arg_history(unsigned int start
 
 static enum greatest_test_res check_data_initial_spi_behaviour(unsigned int start)
 {
-	CHECK_CALL(check_data_call_history(start));
+	CHECK_CALL(check_spi_pins_data_call_history(start));
 	CHECK_CALL(check_spi_pins_data_arg_history(start));
 	PASS();
 }
@@ -347,7 +347,7 @@ TEST test_st7789_sw_reset(void)
 	unsigned int previous_commands = 0;
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 
-	CHECK_CALL(check_command_call_history(previous_commands));
+	CHECK_CALL(check_spi_pins_command_call_history(previous_commands));
 	CHECK_CALL(check_spi_pins_command_arg_history(previous_commands));
 	CHECK_CALL(check_tx_byte(0x01, previous_commands)); // 0x01 == SW Reset command
 	PASS();
@@ -360,7 +360,7 @@ TEST test_st7789_power_on_sequence(void)
 
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
-	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
+	CHECK_CALL(check_spi_pins_command_call_history(hw_reset_fff_call_count()));
 	CHECK_CALL(check_spi_pins_command_arg_history(1));
 	CHECK_CALL(check_tx_byte(0x01, previous_tx_commands)); // 0x01 == SW Reset command
 	PASS();
@@ -394,7 +394,7 @@ TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 	ASSERT_EQ_FMT(init_xy_size.y, some_st7789.screen_size.y, "%u");
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
-	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
+	CHECK_CALL(check_spi_pins_command_call_history(hw_reset_fff_call_count()));
 	CHECK_CALL(check_spi_pins_command_arg_history(1));
 	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
