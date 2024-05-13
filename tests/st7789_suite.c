@@ -225,6 +225,13 @@ static enum greatest_test_res check_spi_pins_data_arg_history(unsigned int start
 	PASS();
 }
 
+static enum greatest_test_res check_data_spi_behaviour(unsigned int start)
+{
+	CHECK_CALL(check_data_call_history(start));
+	CHECK_CALL(check_spi_pins_data_arg_history(start));
+	PASS();
+}
+
 static enum greatest_test_res check_tx_byte(uint8_t tx_byte, unsigned int start)
 {
 	ASSERT_EQ(tx_byte, trigger_spi_byte_transfer_fake.arg1_history[start]);
@@ -536,8 +543,7 @@ TEST test_st7789_commands_with_one_arg(void)
 	unsigned int previous_commands = 0;
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
-	CHECK_CALL(check_data_call_history(previous_commands));
-	CHECK_CALL(check_spi_pins_data_arg_history(previous_commands));
+	CHECK_CALL(check_data_spi_behaviour(previous_commands));
 
 	PASS();
 }
