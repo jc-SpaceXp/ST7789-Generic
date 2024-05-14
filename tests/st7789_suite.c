@@ -186,7 +186,7 @@ static enum greatest_test_res check_hw_reset_arg_history(void)
 	PASS();
 }
 
-static enum greatest_test_res check_command_call_history(unsigned int start)
+static enum greatest_test_res check_spi_pins_command_call_history(unsigned int start)
 {
 	// CS must aldo be pulled low when a data needs to be sent or recieved
 	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[start]); // DC/X
@@ -196,13 +196,49 @@ static enum greatest_test_res check_command_call_history(unsigned int start)
 	PASS();
 }
 
-static enum greatest_test_res check_command_arg_history(unsigned int start)
+static enum greatest_test_res check_spi_pins_command_arg_history(unsigned int start)
 {
 	// DC/X needs to be pulled lo for commands
 	// CS is also pulled lo to inidacte the beggining of a transfer
 	ASSERT_EQ(some_st7789.dcx.pin, deassert_spi_pin_fake.arg1_history[start]);
 	ASSERT_EQ(some_st7789.dcx.deassert_addr, deassert_spi_pin_fake.arg0_history[start]);
 	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[start + 1]);
+	PASS();
+}
+
+static enum greatest_test_res check_spi_pins_data_call_history(unsigned int start)
+{
+	// CS must also be pulled low when a data needs to be sent or recieved
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[start]); // DC/X
+	ASSERT_EQ((void*) deassert_spi_pin, fff.call_history[start + 1]); // CS
+	ASSERT_EQ((void*) trigger_spi_byte_transfer, fff.call_history[start + 2]);
+	PASS();
+}
+
+static enum greatest_test_res check_spi_pins_data_arg_history(unsigned int start)
+{
+	// DC/X needs to be pulled hi for data
+	// CS is also pulled lo to inidacte the beggining of a transfer
+	ASSERT_EQ(some_st7789.dcx.pin, assert_spi_pin_fake.arg1_history[start]);
+	ASSERT_EQ(some_st7789.dcx.assert_addr, assert_spi_pin_fake.arg0_history[start]);
+	ASSERT_EQ(some_st7789.csx.pin, deassert_spi_pin_fake.arg1_history[start]);
+	PASS();
+}
+
+static enum greatest_test_res check_data_initial_spi_behaviour(unsigned int start)
+{
+	CHECK_CALL(check_spi_pins_data_call_history(start));
+	CHECK_CALL(check_spi_pins_data_arg_history(start));
+	PASS();
+}
+
+static enum greatest_test_res check_data_tx_paused(unsigned int data_start
+                                                  , unsigned int previous_spi_tx_calls)
+{
+	// DC/X already hi, CS/X already lo (+2 below)
+	// +X previous spi tx calls
+	ASSERT_EQ((void*) assert_spi_pin, fff.call_history[data_start + 2 + previous_spi_tx_calls]);
+	ASSERT_EQ(some_st7789.csx.pin, assert_spi_pin_fake.arg1_history[data_start + 1]);
 	PASS();
 }
 
@@ -256,6 +292,20 @@ static enum greatest_test_res check_raset_caset_args(unsigned int start
 	PASS();
 }
 
+static int get_first_command_id_index(uint8_t command_id)
+{
+	int first_cmd_index = -5;
+	for (int i = 0; i < (int) trigger_spi_byte_transfer_fake.call_count; ++i) {
+		if (trigger_spi_byte_transfer_fake.arg1_history[i] == command_id) {
+			first_cmd_index = i;
+			break;
+		}
+	}
+
+	return first_cmd_index;
+}
+
+
 TEST snprintf_return_val(bool sn_error)
 {
 	ASSERT_FALSE(sn_error);
@@ -297,8 +347,8 @@ TEST test_st7789_sw_reset(void)
 	unsigned int previous_commands = 0;
 	st7789_send_command(&some_st7789, &some_spi_data_reg, SWRESET);
 
-	CHECK_CALL(check_command_call_history(previous_commands));
-	CHECK_CALL(check_command_arg_history(previous_commands));
+	CHECK_CALL(check_spi_pins_command_call_history(previous_commands));
+	CHECK_CALL(check_spi_pins_command_arg_history(previous_commands));
 	CHECK_CALL(check_tx_byte(0x01, previous_commands)); // 0x01 == SW Reset command
 	PASS();
 }
@@ -310,8 +360,8 @@ TEST test_st7789_power_on_sequence(void)
 
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
-	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
-	CHECK_CALL(check_command_arg_history(1));
+	CHECK_CALL(check_spi_pins_command_call_history(hw_reset_fff_call_count()));
+	CHECK_CALL(check_spi_pins_command_arg_history(1));
 	CHECK_CALL(check_tx_byte(0x01, previous_tx_commands)); // 0x01 == SW Reset command
 	PASS();
 }
@@ -344,8 +394,8 @@ TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 	ASSERT_EQ_FMT(init_xy_size.y, some_st7789.screen_size.y, "%u");
 	CHECK_CALL(check_hw_reset_call_history());
 	CHECK_CALL(check_hw_reset_arg_history());
-	CHECK_CALL(check_command_call_history(hw_reset_fff_call_count()));
-	CHECK_CALL(check_command_arg_history(1));
+	CHECK_CALL(check_spi_pins_command_call_history(hw_reset_fff_call_count()));
+	CHECK_CALL(check_spi_pins_command_arg_history(1));
 	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
 	CHECK_CALL(tx_byte_was_sent(DISPON, true));
@@ -500,10 +550,12 @@ void loop_test_all_init_possibilities(void)
 
 TEST test_st7789_commands_with_one_arg(void)
 {
+	unsigned int previous_commands = 0;
+	unsigned int spi_tx_transfers = 1;
 	st7789_send_data(&some_st7789, &some_spi_data_reg, 0x02); // args: 1st == upper byte
 
-	ASSERT_EQ(fff.call_history[0], (void*) assert_spi_pin); // DC/X high for data
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
+	CHECK_CALL(check_data_initial_spi_behaviour(previous_commands));
+	CHECK_CALL(check_data_tx_paused(previous_commands, spi_tx_transfers));
 
 	PASS();
 }
@@ -512,13 +564,15 @@ TEST test_st7789_commands_with_four_args(void)
 {
 	unsigned int cols = 60;
 	unsigned int cole = 69;
+	unsigned int previous_commands = 0;
+	unsigned int spi_tx_transfers = 4;
 	uint8_t caset_args[4] = {get_upper_byte(cols), get_lower_byte(cols)
 	                        ,get_upper_byte(cole), get_lower_byte(cole)};
 	st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, caset_args, 4, TxPause);
 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 4);
-	ASSERT_EQ(assert_spi_pin_fake.arg1_history[0], 10); // 10 == DC/X pin
-
+	CHECK_CALL(check_data_initial_spi_behaviour(previous_commands));
+	CHECK_CALL(check_data_tx_paused(previous_commands, spi_tx_transfers));
 	PASS();
 }
 
@@ -619,8 +673,6 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	unsigned int y_pixels = st7789_fill->input.pixels.total_y;
 	set_screen_size(&some_st7789.screen_size, x_pixels, y_pixels);
 	unsigned int total_pixels = x_pixels * y_pixels;
-	unsigned int raset_cmd_index = 0;
-	unsigned int caset_cmd_index = 5;
 	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.red)
                              , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.green)
                              , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.blue) };
@@ -632,9 +684,13 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[raset_cmd_index], RASET);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[caset_cmd_index], CASET);
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[10], RAMWRC);
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	int ramwrc_cmd_index = get_first_command_id_index(RAMWRC);
+	ASSERTm("RASET not called?", raset_cmd_index != -5);
+	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	ASSERTm("RAMWRC must be called after RASET", ramwrc_cmd_index > raset_cmd_index);
+	ASSERTm("RAMWRC must be called after CASET", ramwrc_cmd_index > caset_cmd_index);
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
