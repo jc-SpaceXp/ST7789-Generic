@@ -26,9 +26,16 @@
 #define WRMEMC  0x3C
 #define RAMWRC  WRMEMC
 
+struct RawRgbInput {
+	unsigned int red;
+	unsigned int green;
+	unsigned int blue;
+};
+
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
+struct St7789Size;
 struct UserCallbacksSt7789;
 enum SpiSignal { RSX, CSX, DCX };
 enum SleepModes { SleepIn, SleepOut };
@@ -37,6 +44,10 @@ enum DisplayModes { NormalDisp, PartialDisp };
 enum TxCmdOrData { TxCmd, TxData };
 enum TxContinueOrPause { TxPause, TxContinue };
 enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
+
+enum InitInversion { InvertOff, InvertOn };
+enum FillScreenRegion { IgnoreRegion, FillRegion };
+enum BitsPerPixel { Pixel12, Pixel16, Pixel16M, Pixel18 };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
@@ -60,6 +71,11 @@ uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour);
 
 void pre_st7789_transfer(const struct St7789Internals* st7789_driver, enum TxCmdOrData data);
 
+void set_screen_size(struct St7789Size* screen_size, unsigned int x, unsigned int y);
+
+void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , enum BitsPerPixel bpp);
 void st7789_hw_reset(struct St7789Internals* st7789_driver);
 void st7789_send_command(struct St7789Internals* st7789_driver
                         , volatile uint32_t* spi_tx_reg
@@ -83,5 +99,17 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
                              , unsigned int y_end);
 void st7789_power_on_sequence(struct St7789Internals* st7789_driver
                              , volatile uint32_t* spi_tx_reg);
+void st7789_init_sequence(struct St7789Internals* st7789_driver
+                         , volatile uint32_t* spi_tx_reg
+                         , enum InitInversion invert
+                         , enum FillScreenRegion screen_region
+                         , struct St7789Size init_size
+                         , struct RawRgbInput rgb);
+void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , uint8_t* colour_args);
 
+void st7789_fill_screen(struct St7789Internals* st7789_driver
+                       , volatile uint32_t* spi_tx_reg
+                       , uint8_t* colour_args);
 #endif /* ST7789_H */

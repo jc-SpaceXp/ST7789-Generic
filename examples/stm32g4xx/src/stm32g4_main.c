@@ -36,42 +36,11 @@ int main (void)
 	};
 	init_st7789_callbacks(&st7789.user_defined, &st7789_callbacks);
 
-	// Initial modes are:
-	// SLPIN, DISPOFF, NORMAL MODE, IDLE OFF
-
-	// Init sequence below
-	st7789_power_on_sequence(&st7789, &SPI1->DR);
-
-	st7789_send_command(&st7789, &SPI1->DR, SLPOUT);
-	stm32_delay_ms(120);
-
-	// define whole screen region writeable
-	unsigned int y_start = 0;
-	unsigned int y_end = 319;
-	st7789_set_y_coordinates(&st7789, &SPI1->DR, y_start, y_end);
-
-	unsigned int x_start = 0;
-	unsigned int x_end = 239;
-	st7789_set_x_coordinates(&st7789, &SPI1->DR, x_start, x_end);
-
-	// Needed to display the correct colour, otherwise display is inverted
-	st7789_send_command(&st7789, &SPI1->DR, INVON);
+	struct St7789Size init_xy_size = { 240, 320 };
 
 	// write a colour to the whole screen, converted to RGB 666
-	unsigned int r_col = 170;
-	unsigned int g_col = 128;
-	unsigned int b_col = 255;
-	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
-	                         , st7789_6bit_colour_index_to_byte(g_col)
-	                         , st7789_6bit_colour_index_to_byte(b_col) };
-	st7789_send_command(&st7789, &SPI1->DR, RAMWRC);
-	for (unsigned int y = 0; y <= y_end; ++y) {
-		for (unsigned int x = 0; x <= x_end; ++x) {
-			st7789_send_data_via_array(&st7789, &SPI1->DR, colour_args, 3, TxContinue);
-		}
-	}
-	// any command after a N parameter command will stop the previous one
-	st7789_send_command(&st7789, &SPI1->DR, DISPON);
+	struct RawRgbInput rgb = { 170, 128, 255 };
+	st7789_init_sequence(&st7789, &SPI1->DR, InvertOn, FillRegion, init_xy_size, rgb);
 
 	return 0;
 }

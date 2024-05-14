@@ -123,6 +123,34 @@ uint8_t st7789_6bit_colour_index_to_byte(unsigned int colour)
 	return (six_bit_colour << 2);
 }
 
+void set_screen_size(struct St7789Size* screen_size, unsigned int x, unsigned int y)
+{
+	screen_size->x = x;
+	screen_size->y = y;
+}
+
+void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , enum BitsPerPixel bpp)
+{
+	// input RGB is converted in st7889 via a LUT to display an output colour
+	// typically the LUT is for the 18-bit output (18 on reset for both input/output)
+	// input is refered to as the colour interface in the datasheet
+	uint8_t data = 0;
+	if (bpp == Pixel18) {
+		data |= 0x06;
+	} else if (bpp == Pixel16) {
+		data |= 0x05;
+	} else if (bpp == Pixel16M) {
+		data |= 0x07;
+	} else if (bpp == Pixel12) {
+		data |= 0x03;
+	}
+
+	st7789_send_command(st7789_driver, spi_tx_reg, COLMOD);
+	st7789_send_data(st7789_driver, spi_tx_reg, data);
+}
+
 void st7789_hw_reset(struct St7789Internals* st7789_driver)
 {
 	// Must be a hi-lo transition, pulse RES for 10us minimum
@@ -230,6 +258,36 @@ void st7789_power_on_sequence(struct St7789Internals* st7789_driver
 	delay_ms(120);
 }
 
+void st7789_init_sequence(struct St7789Internals* st7789_driver
+                         , volatile uint32_t* spi_tx_reg
+                         , enum InitInversion invert
+                         , enum FillScreenRegion screen_region
+                         , struct St7789Size init_size
+                         , struct RawRgbInput rgb)
+{
+	void delay_ms(unsigned int ms_delay) {
+		st7789_driver->user_defined.delay_us(1000 * ms_delay);
+	}
+	set_screen_size(&st7789_driver->screen_size, init_size.x, init_size.y);
+	// Initial modes are:
+	// SPLIN, DISPOFF, NORMAL MODE, IDLE OFF
+	st7789_power_on_sequence(st7789_driver, spi_tx_reg);
+	st7789_send_command(st7789_driver, spi_tx_reg, SLPOUT);
+	delay_ms(120);
+	// Optionally invert screen, necessary for some screens to display correct colour
+	if (invert == InvertOn) { st7789_send_command(st7789_driver, spi_tx_reg, INVON); }
+	// Set screen size and set a colour
+	if (screen_region == FillRegion) {
+		// Assumes 18-bit colour for now
+		uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(rgb.red)
+		                         , st7789_6bit_colour_index_to_byte(rgb.green)
+		                         , st7789_6bit_colour_index_to_byte(rgb.blue) };
+		st7789_fill_screen(st7789_driver, spi_tx_reg, colour_args);
+	}
+
+	st7789_send_command(st7789_driver, spi_tx_reg, DISPON);
+}
+
 static void st7789_set_x_or_y_region(struct St7789Internals* st7789_driver
                                     , volatile uint32_t* spi_tx_reg
                                     , enum TxCasetOrRaset cmd
@@ -262,4 +320,33 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
                              , unsigned int y_end)
 {
 	st7789_set_x_or_y_region(st7789_driver, spi_tx_reg, TxRaset, y_start, y_end);
+}
+
+void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
+                                   , volatile uint32_t* spi_tx_reg
+                                   , uint8_t* colour_args)
+{
+	st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
+}
+
+void st7789_fill_screen(struct St7789Internals* st7789_driver
+                       , volatile uint32_t* spi_tx_reg
+                       , uint8_t* colour_args)
+{
+	// set_screen_size() must be called before
+	// RASET/CASET require a -1 as they are zero indexed
+	// e.g. 240 pixels would be 0-239
+	unsigned int y_start = 0;
+	unsigned int y_end = st7789_driver->screen_size.y;
+	st7789_set_y_coordinates(st7789_driver, spi_tx_reg, y_start, y_end - 1);
+	unsigned int x_start = 0;
+	unsigned int x_end = st7789_driver->screen_size.x;
+	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end - 1);
+
+	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
+	for (int y = 0; y < (int) y_end; ++y) {
+		for (int x = 0; x < (int) x_end; ++x) {
+			st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
+		}
+	}
 }
