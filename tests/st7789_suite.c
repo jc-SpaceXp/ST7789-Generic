@@ -50,6 +50,12 @@ struct LoopTestSt7789ColourFormats {
 	uint8_t tx_expected;
 };
 
+struct LoopTestSt7789RgbPixelInfo {
+	enum BitsPerPixel bpp;
+	struct RawRgbInput rgb;
+	uint8_t expected[3];
+};
+
 struct LoopTestSt7789FillColour {
 	struct Inputs {
 		struct Pixels {
@@ -646,6 +652,71 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	PASS();
 }
 
+TEST test_st7789_correct_rgb666_format(const struct LoopTestSt7789RgbPixelInfo* st7789_bpp)
+{
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_bpp->rgb, st7789_bpp->bpp);
+
+	ASSERT_EQ_FMT(3, test_rgb_format.rgb666.total_bytes, "%u");
+	ASSERT_EQ_FMT(st7789_bpp->expected[0], test_rgb_format.rgb666.bytes[0], "%u\n");
+	ASSERT_EQ_FMT(st7789_bpp->expected[1], test_rgb_format.rgb666.bytes[1], "%u\n");
+	ASSERT_EQ_FMT(st7789_bpp->expected[2], test_rgb_format.rgb666.bytes[2], "%u\n");
+	PASS();
+}
+
+TEST test_st7789_correct_rgb565_format(const struct LoopTestSt7789RgbPixelInfo* st7789_bpp)
+{
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_bpp->rgb, st7789_bpp->bpp);
+
+	ASSERT_EQ_FMT(2, test_rgb_format.rgb565.total_bytes, "%u");
+	ASSERT_EQ_FMT(st7789_bpp->rgb.red & 0x1F, test_rgb_format.rgb565.bytes[0] >> 3, "%u\n");
+	ASSERT_EQ_FMT(st7789_bpp->rgb.green & 0x3F
+	             , ((test_rgb_format.rgb565.bytes[0] & 0x07) << 3)
+	               | ((test_rgb_format.rgb565.bytes[1] & 0xE0) >> 5)
+	             , "%u\n");
+	ASSERT_EQ_FMT(st7789_bpp->rgb.blue & 0x1F, test_rgb_format.rgb565.bytes[1] & 0x1F, "%u\n");
+	PASS();
+}
+
+void loop_test_rgb_inputs_to_st7789_formats(void)
+{
+	struct RawRgbInput test_rgb[3] = {
+		{0x40, 0x31, 0x51}
+		, {0xFF, 0xFF, 0xFF}
+		, {0x72, 0x44, 0x12}
+	};
+	const struct LoopTestSt7789RgbPixelInfo st7789_bpp[4] = {
+		// Pixel,  RgbInput, ExpectedOutput
+		{ Pixel18, test_rgb[0]
+		           , { (test_rgb[0].red << 2) & 0xFF
+		             , (test_rgb[0].green << 2) & 0xFF
+		             , (test_rgb[0].blue << 2) & 0xFF } }
+		, { Pixel18, test_rgb[1]
+		             , { (test_rgb[1].red << 2) & 0xFF
+		               , (test_rgb[1].green << 2) & 0xFF
+		               , (test_rgb[1].blue << 2) & 0xFF } }
+		// Pixel18 RG666 is shifted left by 2 bits for output
+		, { Pixel16, test_rgb[1], { 0xFF, 0xFF, 0x00 } }
+		, { Pixel16, test_rgb[2], { 0x90, 0x92, 0x00 } }
+		// Pixel16 RG565 takes lowest 5/6 bits from rgb channels
+		// expected data is ignored (see 565 unit test)
+	};
+
+	for (int i = 0; i < 4; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		if (st7789_bpp[i].bpp == Pixel18) {
+			RUN_TEST1(test_st7789_correct_rgb666_format, &st7789_bpp[i]);
+		} else if (st7789_bpp[i].bpp == Pixel16) {
+			RUN_TEST1(test_st7789_correct_rgb565_format, &st7789_bpp[i]);
+		}
+	}
+}
+
 TEST test_st7789_write_n_args_18_bit_colour(void)
 {
 	// CASET and RASET would have been called before as well as RAMWR or RAMWRC
@@ -757,6 +828,7 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_commands_with_one_arg);
 	RUN_TEST(test_st7789_commands_with_four_args);
 	loop_test_all_bits_per_pixel_formats();
+	loop_test_rgb_inputs_to_st7789_formats();
 	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 	loop_test_st7789_fill_screen();

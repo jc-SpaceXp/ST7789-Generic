@@ -336,6 +336,24 @@ void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
 	st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
 }
 
+union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPerPixel bpp)
+{
+	union RgbInputFormat rgb_st7789;
+	rgb_st7789.rgb666.total_bytes = 2;
+	if (bpp == Pixel18) {
+		rgb_st7789.rgb666.bytes[0] = st7789_6bit_colour_index_to_byte(rgb.red);
+		rgb_st7789.rgb666.bytes[1] = st7789_6bit_colour_index_to_byte(rgb.green);
+		rgb_st7789.rgb666.bytes[2] = st7789_6bit_colour_index_to_byte(rgb.blue);
+		rgb_st7789.rgb666.total_bytes = 3;
+	} else if (bpp == Pixel16) {
+		// Format: RRRR RGGG GGGB BBBB (keep lowest 5/6 bits for each channel)
+		rgb_st7789.rgb565.bytes[0] = ((rgb.red & 0x1F) << 3)   | ((rgb.green & 0x38) >> 3);
+		rgb_st7789.rgb565.bytes[1] = ((rgb.green & 0x07) << 5) | (rgb.blue & 0x1F);
+	}
+
+	return rgb_st7789;
+}
+
 void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
                        , uint8_t* colour_args)

@@ -32,6 +32,21 @@ struct RawRgbInput {
 	unsigned int blue;
 };
 
+union RgbInputFormat {
+	struct Bpp18 {
+		uint8_t bytes[3];
+		unsigned int total_bytes;
+	} rgb666;
+	struct Bpp16 {
+		uint8_t bytes[2];
+		unsigned int total_bytes;
+	} rgb565;
+	struct Bpp12 {
+		uint8_t bytes[2];
+		unsigned int total_bytes;
+	} rgb444;
+};
+
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
@@ -106,6 +121,8 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , struct St7789Size init_size
                          , struct RawRgbInput rgb
                          , enum BitsPerPixel bpp);
+
+union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPerPixel bpp);
 void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
                                    , volatile uint32_t* spi_tx_reg
                                    , uint8_t* colour_args);
