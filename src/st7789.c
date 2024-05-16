@@ -265,12 +265,14 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , enum InitInversion invert
                          , enum FillScreenRegion screen_region
                          , struct St7789Size init_size
-                         , struct RawRgbInput rgb)
+                         , struct RawRgbInput rgb
+                         , enum BitsPerPixel bpp)
 {
 	void delay_ms(unsigned int ms_delay) {
 		st7789_driver->user_defined.delay_us(1000 * ms_delay);
 	}
 	set_screen_size(&st7789_driver->screen_size, init_size.x, init_size.y);
+	st7789_driver->pixel_depth = Pixel18; // 18-bits per pixel on reset
 	// Initial modes are:
 	// SPLIN, DISPOFF, NORMAL MODE, IDLE OFF
 	st7789_power_on_sequence(st7789_driver, spi_tx_reg);
@@ -278,6 +280,9 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
 	delay_ms(120);
 	// Optionally invert screen, necessary for some screens to display correct colour
 	if (invert == InvertOn) { st7789_send_command(st7789_driver, spi_tx_reg, INVON); }
+	if (bpp != Pixel18) {
+		st7789_set_input_colour_format(st7789_driver, spi_tx_reg, bpp);
+	}
 	// Set screen size and set a colour
 	if (screen_region == FillRegion) {
 		// Assumes 18-bit colour for now

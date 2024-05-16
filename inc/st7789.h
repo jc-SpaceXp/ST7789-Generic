@@ -104,7 +104,8 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , enum InitInversion invert
                          , enum FillScreenRegion screen_region
                          , struct St7789Size init_size
-                         , struct RawRgbInput rgb);
+                         , struct RawRgbInput rgb
+                         , enum BitsPerPixel bpp);
 void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
                                    , volatile uint32_t* spi_tx_reg
                                    , uint8_t* colour_args);

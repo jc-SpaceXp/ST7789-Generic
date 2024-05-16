@@ -29,13 +29,14 @@ struct LoopTestSt7789Init {
 		enum InitInversion invert;
 		enum FillScreenRegion screen_region;
 		struct RawRgbInput rgb;
+		enum BitsPerPixel bpp;
 	};
-	// INVON, CASET, RASET
+	// INVON, COLMOD, CASET, RASET, RAMWRC
 	// (SWRESET, SLPOUT, DISPON are always called hence not needed here)
 	struct St7789ExpectedTx {
 		uint8_t tx_byte;
 		bool tx_expected;
-	} tx[4];
+	} tx[5];
 };
 
 struct LoopTestSt7789Modes {
@@ -384,7 +385,8 @@ TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 	                    , st7789_init->invert
 	                    , st7789_init->screen_region
 	                    , init_xy_size
-	                    , st7789_init->rgb);
+	                    , st7789_init->rgb
+	                    , st7789_init->bpp);
 
 	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
@@ -399,8 +401,8 @@ TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 	CHECK_CALL(tx_byte_was_sent(SWRESET, true));
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
 	CHECK_CALL(tx_byte_was_sent(DISPON, true));
-	for (int i = 0; i < 4; ++i) { // tx struct array size is 4
-		// INVON, CASET, RASET, RAMWRC
+	for (int i = 0; i < 5; ++i) { // tx struct array size is 5
+		// INVON, COLMOD, CASET, RASET, RAMWRC
 		CHECK_CALL(tx_byte_was_sent(st7789_init->tx[i].tx_byte, st7789_init->tx[i].tx_expected));
 	}
 	PASS();
@@ -522,21 +524,33 @@ void loop_test_all_transitions(void)
 void loop_test_all_init_possibilities(void)
 {
 	struct RawRgbInput rgb = { 1, 2, 3 };
-	const struct LoopTestSt7789Init st7789_init[4] = {
-		{ {InvertOff, IgnoreRegion, rgb}
-		  , { {INVON, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+	const struct LoopTestSt7789Init st7789_init[8] = {
+		{ {InvertOff, IgnoreRegion, rgb, Pixel18}
+		  , { {INVON, false}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
 
-		, { {InvertOn, IgnoreRegion, rgb}
-		  , { {INVON, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+		, { {InvertOn, IgnoreRegion, rgb, Pixel18}
+		  , { {INVON, true}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
 
-		, { {InvertOff, FillRegion, rgb}
-		  , { {INVON, false}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+		, { {InvertOff, FillRegion, rgb, Pixel18}
+		  , { {INVON, false}, {COLMOD, false}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
 
-		, { {InvertOn, FillRegion, rgb}
-		  , { {INVON, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+		, { {InvertOn, FillRegion, rgb, Pixel18}
+		  , { {INVON, true}, {COLMOD, false}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+
+		, { {InvertOff, IgnoreRegion, rgb, Pixel16}
+		  , { {INVON, false}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+
+		, { {InvertOn, IgnoreRegion, rgb, Pixel16M}
+		  , { {INVON, true}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+
+		, { {InvertOff, FillRegion, rgb, Pixel12}
+		  , { {INVON, false}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+
+		, { {InvertOn, FillRegion, rgb, Pixel12}
+		  , { {INVON, true}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
 	};
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 8; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
