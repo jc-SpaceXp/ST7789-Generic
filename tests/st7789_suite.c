@@ -652,6 +652,56 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	PASS();
 }
 
+TEST test_st7789_write_18_or_16_bit_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
+{
+	// CASET and RASET would have been called before
+	unsigned int total_tx_bytes = 2;
+	if (st7789_pixel->bpp == Pixel18) {
+		total_tx_bytes = 3;
+	}
+	union RgbInputFormat expected_data = rgb_to_st7789_formatter(st7789_pixel->rgb, st7789_pixel->bpp);
+
+	st7789_set_pixel_colour(&some_st7789, &some_spi_data_reg, st7789_pixel->rgb, st7789_pixel->bpp);
+
+	ASSERT_EQ_FMT(total_tx_bytes, trigger_spi_byte_transfer_fake.call_count, "%u\n");
+	// Very similar struct layouts, taking the array in the struct member inside the union
+	// should have the same address
+	ASSERT_MEM_EQ(expected_data.rgb666.bytes, expected_data.rgb565.bytes, 2);
+	ASSERT_MEM_EQ(expected_data.rgb565.bytes, expected_data.rgb444.bytes, 2);
+	CHECK_CALL(check_repeated_tx_data(0, expected_data.rgb666.bytes, total_tx_bytes));
+	PASS();
+}
+
+void loop_test_output_pixel_depths(void)
+{
+	struct RawRgbInput test_rgb[3] = {
+		{0x40, 0x31, 0x51}
+		, {0xFF, 0xFF, 0xFF}
+		, {0x72, 0x44, 0x12}
+	};
+	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[5] = {
+		// Pixel,  RgbInput,     ExpectedOutput (unused)
+		{ Pixel18, test_rgb[0] , { 0, 0, 0 } }
+		, { Pixel18, test_rgb[1], { 0, 0, 0 } }
+		// Pixel18 RG666 is shifted left by 2 bits for output
+		, { Pixel16, test_rgb[0], { 0, 0, 0 } }
+		, { Pixel16, test_rgb[1], { 0, 0, 0 } }
+		, { Pixel16, test_rgb[2], { 0, 0, 0 } }
+		// Pixel16 RG565 takes lowest 5/6 bits from rgb channels
+	};
+
+	for (int i = 0; i < 5; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_st7789_write_18_or_16_bit_colour_to_specific_pixel, &st7789_pixel[i]);
+	}
+}
+
 TEST test_st7789_correct_rgb666_format(const struct LoopTestSt7789RgbPixelInfo* st7789_bpp)
 {
 	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_bpp->rgb, st7789_bpp->bpp);
@@ -830,6 +880,7 @@ SUITE(st7789_driver)
 	loop_test_all_bits_per_pixel_formats();
 	loop_test_rgb_inputs_to_st7789_formats();
 	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
+	loop_test_output_pixel_depths();
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 	loop_test_st7789_fill_screen();
 }

@@ -354,6 +354,25 @@ union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPe
 	return rgb_st7789;
 }
 
+void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
+                            , volatile uint32_t* spi_tx_reg
+                            , struct RawRgbInput rgb_input
+                            , enum BitsPerPixel bpp)
+{
+	uint8_t* args = NULL;
+	unsigned int total_bytes = 0;
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
+	if (bpp == Pixel18) {
+		args = &rgb_format.rgb666.bytes[0];
+		total_bytes = rgb_format.rgb666.total_bytes;
+	} else if (bpp == Pixel16) {
+		args = &rgb_format.rgb565.bytes[0];
+		total_bytes = rgb_format.rgb565.total_bytes;
+	}
+
+	st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
+}
+
 void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
                        , uint8_t* colour_args)

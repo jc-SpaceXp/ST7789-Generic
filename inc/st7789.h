@@ -123,6 +123,10 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , enum BitsPerPixel bpp);
 
 union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPerPixel bpp);
+void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
+                            , volatile uint32_t* spi_tx_reg
+                            , struct RawRgbInput rgb_input
+                            , enum BitsPerPixel bpp);
 void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
                                    , volatile uint32_t* spi_tx_reg
                                    , uint8_t* colour_args);
