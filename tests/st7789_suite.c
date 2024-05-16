@@ -584,6 +584,7 @@ TEST st7789_set_bits_per_pixel_format(const struct LoopTestSt7789ColourFormats* 
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 2);
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[0], 0x3A); // COLMOD
 	ASSERT_EQ(trigger_spi_byte_transfer_fake.arg1_history[1], st7789_colour->tx_expected);
+	ASSERT_EQ(st7789_colour->bpp, some_st7789.pixel_depth);
 	PASS();
 }
 

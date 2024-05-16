@@ -149,6 +149,8 @@ void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
 
 	st7789_send_command(st7789_driver, spi_tx_reg, COLMOD);
 	st7789_send_data(st7789_driver, spi_tx_reg, data);
+
+	st7789_driver->pixel_depth = bpp;
 }
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver)
