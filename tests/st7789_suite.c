@@ -531,7 +531,7 @@ void loop_test_all_transitions(void)
 void loop_test_all_init_possibilities(void)
 {
 	struct RawRgbInput rgb = { 1, 2, 3 };
-	const struct LoopTestSt7789Init st7789_init[8] = {
+	const struct LoopTestSt7789Init st7789_init[9] = {
 		{ {InvertOff, IgnoreRegion, rgb, Pixel18}
 		  , { {INVON, false}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
 
@@ -555,9 +555,12 @@ void loop_test_all_init_possibilities(void)
 
 		, { {InvertOn, FillRegion, rgb, Pixel12}
 		  , { {INVON, true}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+
+		, { {InvertOn, IgnoreRegion, rgb, Pixel24}
+		  , { {INVON, true}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
 	};
 
-	for (int i = 0; i < 8; ++i) {
+	for (int i = 0; i < 9; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
@@ -611,14 +614,15 @@ TEST st7789_set_bits_per_pixel_format(const struct LoopTestSt7789ColourFormats* 
 
 void loop_test_all_bits_per_pixel_formats(void)
 {
-	const struct LoopTestSt7789ColourFormats st7789_bpp[4] = {
+	const struct LoopTestSt7789ColourFormats st7789_bpp[5] = {
 		{ Pixel18,  0x06 } // D3-D0: 0110
 		, { Pixel12, 0x03 } // D3-D0: 0011
 		, { Pixel16, 0x05 } // D3-D0: 0101
-		, { Pixel16M, 0x07 } // D3-D0: 0111
+		, { Pixel24, 0x07 } // D3-D0: 0111
+		, { Pixel16M, 0x07 } // D3-D0: 0111 (alias for Pixel24)
 	};
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 5; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
@@ -656,9 +660,9 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
 	// CASET and RASET would have been called before
-	unsigned int total_tx_bytes = 2;
-	if (st7789_pixel->bpp == Pixel18) {
-		total_tx_bytes = 3;
+	unsigned int total_tx_bytes = 3;
+	if ((st7789_pixel->bpp == Pixel12) || (st7789_pixel->bpp == Pixel16)) {
+		total_tx_bytes = 2;
 	}
 	union RgbInputFormat expected_data = rgb_to_st7789_formatter(st7789_pixel->rgb, st7789_pixel->bpp);
 
@@ -669,6 +673,7 @@ TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPi
 	// should have the same address
 	ASSERT_MEM_EQ(expected_data.rgb666.bytes, expected_data.rgb565.bytes, 2);
 	ASSERT_MEM_EQ(expected_data.rgb565.bytes, expected_data.rgb444.bytes, 2);
+	ASSERT_MEM_EQ(expected_data.rgb888.bytes, expected_data.rgb666.bytes, 2);
 	CHECK_CALL(check_repeated_tx_data(0, expected_data.rgb666.bytes, total_tx_bytes));
 	PASS();
 }
@@ -680,7 +685,7 @@ void loop_test_output_pixel_depths(void)
 		, {0xFF, 0xFF, 0xFF}
 		, {0x72, 0x44, 0x12}
 	};
-	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[8] = {
+	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[11] = {
 		// Pixel,  RgbInput,     ExpectedOutput (unused)
 		{ Pixel18, test_rgb[0] , { 0, 0, 0 } }
 		, { Pixel18, test_rgb[1], { 0, 0, 0 } }
@@ -693,9 +698,13 @@ void loop_test_output_pixel_depths(void)
 		, { Pixel12, test_rgb[1], { 0, 0, 0 } }
 		, { Pixel12, test_rgb[2], { 0, 0, 0 } }
 		// Pixel12 RG444 takes lowest 4 bits from rgb channels
+		, { Pixel16M, test_rgb[0], { 0, 0, 0 } }
+		, { Pixel24, test_rgb[1], { 0, 0, 0 } }
+		, { Pixel16M, test_rgb[2], { 0, 0, 0 } }
+		// Pixel24/16M RG888 takes lowest 8 bits from rgb channels
 	};
 
-	for (int i = 0; i < 8; ++i) {
+	for (int i = 0; i < 11; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
@@ -705,6 +714,18 @@ void loop_test_output_pixel_depths(void)
 		greatest_set_test_suffix((const char*) &test_suffix);
 		RUN_TEST1(test_st7789_write_colour_to_specific_pixel, &st7789_pixel[i]);
 	}
+}
+
+TEST test_st7789_correct_rgb888_format(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
+{
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_pixel->rgb
+	                                                              , st7789_pixel->bpp);
+
+	ASSERT_EQ_FMT(3, test_rgb_format.rgb666.total_bytes, "%u");
+	ASSERT_EQ_FMT(st7789_pixel->expected[0], test_rgb_format.rgb666.bytes[0], "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->expected[1], test_rgb_format.rgb666.bytes[1], "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->expected[2], test_rgb_format.rgb666.bytes[2], "%u\n");
+	PASS();
 }
 
 TEST test_st7789_correct_rgb666_format(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
@@ -753,7 +774,7 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		, {0xFF, 0xFF, 0xFF}
 		, {0x72, 0x44, 0x12}
 	};
-	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[6] = {
+	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[8] = {
 		// Pixel,  RgbInput, ExpectedOutput
 		{ Pixel18, test_rgb[0]
 		           , { (test_rgb[0].red << 2) & 0xFF
@@ -764,6 +785,15 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		               , (test_rgb[1].green << 2) & 0xFF
 		               , (test_rgb[1].blue << 2) & 0xFF } }
 		// Pixel18 RG666 is shifted left by 2 bits for output
+		, { Pixel16M, test_rgb[0]
+		             , { (uint8_t) test_rgb[0].red
+		               , (uint8_t) test_rgb[0].green
+		               , (uint8_t) test_rgb[0].blue } }
+		, { Pixel24, test_rgb[1]
+		             , { (uint8_t) test_rgb[1].red
+		               , (uint8_t) test_rgb[1].green
+		               , (uint8_t) test_rgb[1].blue } }
+		// Pixel24/Pixel16M RG888 is bytewise values
 		, { Pixel16, test_rgb[1], { 0xFF, 0xFF, 0x00 } }
 		, { Pixel16, test_rgb[2], { 0x90, 0x92, 0x00 } }
 		// Pixel16 RG565 takes lowest 5/6 bits from rgb channels
@@ -773,7 +803,7 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		// expected data is ignored (see 444 unit test)
 	};
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 8; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
@@ -781,7 +811,9 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		RUN_TEST1(snprintf_return_val, sn_error);
 
 		greatest_set_test_suffix((const char*) &test_suffix);
-		if (st7789_pixel[i].bpp == Pixel18) {
+		if ((st7789_pixel[i].bpp == Pixel24) || (st7789_pixel[i].bpp == Pixel16M)) {
+			RUN_TEST1(test_st7789_correct_rgb888_format, &st7789_pixel[i]);
+		} else if (st7789_pixel[i].bpp == Pixel18) {
 			RUN_TEST1(test_st7789_correct_rgb666_format, &st7789_pixel[i]);
 		} else if (st7789_pixel[i].bpp == Pixel16) {
 			RUN_TEST1(test_st7789_correct_rgb565_format, &st7789_pixel[i]);
@@ -831,9 +863,9 @@ TEST test_st7789_fill_screen(const struct LoopTestSt7789FillColour* st7789_fill)
 	unsigned int y_pixels = st7789_fill->input.pixels.total_y;
 	set_screen_size(&some_st7789.screen_size, x_pixels, y_pixels);
 	unsigned int total_pixels = x_pixels * y_pixels;
-	unsigned int total_tx_bytes = 2;
-	if (st7789_fill->input.bpp == Pixel18) {
-		total_tx_bytes = 3;
+	unsigned int total_tx_bytes = 3;
+	if ((st7789_fill->input.bpp == Pixel12) || (st7789_fill->input.bpp == Pixel16)) {
+		total_tx_bytes = 2;
 	}
 	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_fill->input.rgb
 	                                                              , st7789_fill->input.bpp);
@@ -870,21 +902,25 @@ void loop_test_st7789_fill_screen(void)
 {
 	unsigned int x_pixels = 6;
 	unsigned int y_pixels = 2;
-	struct RawRgbInput test_rgb[6] = {
+	struct RawRgbInput test_rgb[8] = {
 		{ 0x36, 0x0F, 0xC1 }
 		, { 0x36, 0x0F, 0xC1 }
 		, { 0x36, 0x0F, 0xC1 }
+		, { 0x36, 0x0F, 0xC1 }
+		, { 0xDE, 0x69, 0xA2 }
 		, { 0xDE, 0x69, 0xA2 }
 		, { 0xDE, 0x69, 0xA2 }
 		, { 0xDE, 0x69, 0xA2 }
 	};
-	enum BitsPerPixel test_bpp[6] = { Pixel18, Pixel16, Pixel12, Pixel18, Pixel16, Pixel12 };
+	enum BitsPerPixel test_bpp[8] = {
+		Pixel24, Pixel18, Pixel16, Pixel12
+		, Pixel16M, Pixel18, Pixel16, Pixel12 };
 	unsigned int total_pixels = x_pixels * y_pixels;
 
-	for (unsigned int i = 0; i < 6; ++i) {
-		unsigned data_offset = 2;
-		if (test_bpp[i] == Pixel18) {
-			data_offset = 3;
+	for (unsigned int i = 0; i < 8; ++i) {
+		unsigned data_offset = 3;
+		if ((test_bpp[i] == Pixel12) || (test_bpp[i] == Pixel16)) {
+			data_offset = 2;
 		}
 		for (unsigned int pix = 0; pix < total_pixels; ++pix) {
 			const struct LoopTestSt7789FillColour st7789_fill = {

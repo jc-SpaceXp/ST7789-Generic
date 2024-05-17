@@ -137,12 +137,12 @@ void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
 	// typically the LUT is for the 18-bit output (18 on reset for both input/output)
 	// input is refered to as the colour interface in the datasheet
 	uint8_t data = 0;
-	if (bpp == Pixel18) {
+	if ((bpp == Pixel24) || (bpp == Pixel16M)) {
+		data |= 0x07;
+	} else if (bpp == Pixel18) {
 		data |= 0x06;
 	} else if (bpp == Pixel16) {
 		data |= 0x05;
-	} else if (bpp == Pixel16M) {
-		data |= 0x07;
 	} else if (bpp == Pixel12) {
 		data |= 0x03;
 	}
@@ -336,7 +336,12 @@ union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPe
 {
 	union RgbInputFormat rgb_st7789;
 	rgb_st7789.rgb666.total_bytes = 2;
-	if (bpp == Pixel18) {
+	if ((bpp == Pixel24) || (bpp == Pixel16M)) {
+		rgb_st7789.rgb888.bytes[0] = (uint8_t) rgb.red;
+		rgb_st7789.rgb888.bytes[1] = (uint8_t) rgb.green;
+		rgb_st7789.rgb888.bytes[2] = (uint8_t) rgb.blue;
+		rgb_st7789.rgb888.total_bytes = 3;
+	} else if (bpp == Pixel18) {
 		rgb_st7789.rgb666.bytes[0] = st7789_6bit_colour_index_to_byte(rgb.red);
 		rgb_st7789.rgb666.bytes[1] = st7789_6bit_colour_index_to_byte(rgb.green);
 		rgb_st7789.rgb666.bytes[2] = st7789_6bit_colour_index_to_byte(rgb.blue);
@@ -362,7 +367,10 @@ void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
 	uint8_t* args = NULL;
 	unsigned int total_bytes = 0;
 	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
-	if (bpp == Pixel18) {
+	if ((bpp == Pixel24) || (bpp == Pixel16M)) {
+		args = &rgb_format.rgb888.bytes[0];
+		total_bytes = rgb_format.rgb888.total_bytes;
+	} else if (bpp == Pixel18) {
 		args = &rgb_format.rgb666.bytes[0];
 		total_bytes = rgb_format.rgb666.total_bytes;
 	} else if (bpp == Pixel16) {

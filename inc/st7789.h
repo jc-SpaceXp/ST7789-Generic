@@ -33,6 +33,10 @@ struct RawRgbInput {
 };
 
 union RgbInputFormat {
+	struct Bpp24 {
+		uint8_t bytes[3];
+		unsigned int total_bytes;
+	} rgb888;
 	struct Bpp18 {
 		uint8_t bytes[3];
 		unsigned int total_bytes;
@@ -62,7 +66,7 @@ enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
 enum InitInversion { InvertOff, InvertOn };
 enum FillScreenRegion { IgnoreRegion, FillRegion };
-enum BitsPerPixel { Pixel12, Pixel16, Pixel16M, Pixel18 };
+enum BitsPerPixel { Pixel12, Pixel16, Pixel18, Pixel24, Pixel16M };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
