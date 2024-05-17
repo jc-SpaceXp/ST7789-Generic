@@ -368,6 +368,9 @@ void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
 	} else if (bpp == Pixel16) {
 		args = &rgb_format.rgb565.bytes[0];
 		total_bytes = rgb_format.rgb565.total_bytes;
+	} else if (bpp == Pixel12) {
+		args = &rgb_format.rgb444.bytes[0];
+		total_bytes = rgb_format.rgb444.total_bytes;
 	}
 
 	st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);

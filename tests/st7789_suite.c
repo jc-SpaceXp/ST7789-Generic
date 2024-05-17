@@ -653,7 +653,7 @@ TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
 	PASS();
 }
 
-TEST test_st7789_write_18_or_16_bit_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
+TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
 	// CASET and RASET would have been called before
 	unsigned int total_tx_bytes = 2;
@@ -680,7 +680,7 @@ void loop_test_output_pixel_depths(void)
 		, {0xFF, 0xFF, 0xFF}
 		, {0x72, 0x44, 0x12}
 	};
-	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[5] = {
+	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[8] = {
 		// Pixel,  RgbInput,     ExpectedOutput (unused)
 		{ Pixel18, test_rgb[0] , { 0, 0, 0 } }
 		, { Pixel18, test_rgb[1], { 0, 0, 0 } }
@@ -689,9 +689,13 @@ void loop_test_output_pixel_depths(void)
 		, { Pixel16, test_rgb[1], { 0, 0, 0 } }
 		, { Pixel16, test_rgb[2], { 0, 0, 0 } }
 		// Pixel16 RG565 takes lowest 5/6 bits from rgb channels
+		, { Pixel12, test_rgb[0], { 0, 0, 0 } }
+		, { Pixel12, test_rgb[1], { 0, 0, 0 } }
+		, { Pixel12, test_rgb[2], { 0, 0, 0 } }
+		// Pixel12 RG444 takes lowest 4 bits from rgb channels
 	};
 
-	for (int i = 0; i < 5; ++i) {
+	for (int i = 0; i < 8; ++i) {
 		char test_suffix[5];
 		int sn = snprintf(test_suffix, 4, "%u", i);
 		bool sn_error = (sn > 5) || (sn < 0);
@@ -699,7 +703,7 @@ void loop_test_output_pixel_depths(void)
 		RUN_TEST1(snprintf_return_val, sn_error);
 
 		greatest_set_test_suffix((const char*) &test_suffix);
-		RUN_TEST1(test_st7789_write_18_or_16_bit_colour_to_specific_pixel, &st7789_pixel[i]);
+		RUN_TEST1(test_st7789_write_colour_to_specific_pixel, &st7789_pixel[i]);
 	}
 }
 
@@ -866,16 +870,18 @@ void loop_test_st7789_fill_screen(void)
 {
 	unsigned int x_pixels = 6;
 	unsigned int y_pixels = 2;
-	struct RawRgbInput test_rgb[4] = {
+	struct RawRgbInput test_rgb[6] = {
 		{ 0x36, 0x0F, 0xC1 }
+		, { 0x36, 0x0F, 0xC1 }
 		, { 0x36, 0x0F, 0xC1 }
 		, { 0xDE, 0x69, 0xA2 }
 		, { 0xDE, 0x69, 0xA2 }
+		, { 0xDE, 0x69, 0xA2 }
 	};
-	enum BitsPerPixel test_bpp[4] = { Pixel18, Pixel16, Pixel18, Pixel16 };
+	enum BitsPerPixel test_bpp[6] = { Pixel18, Pixel16, Pixel12, Pixel18, Pixel16, Pixel12 };
 	unsigned int total_pixels = x_pixels * y_pixels;
 
-	for (unsigned int i = 0; i < 2; ++i) {
+	for (unsigned int i = 0; i < 6; ++i) {
 		unsigned data_offset = 2;
 		if (test_bpp[i] == Pixel18) {
 			data_offset = 3;
