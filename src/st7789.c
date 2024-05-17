@@ -285,11 +285,7 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
 	}
 	// Set screen size and set a colour
 	if (screen_region == FillRegion) {
-		// Assumes 18-bit colour for now
-		uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(rgb.red)
-		                         , st7789_6bit_colour_index_to_byte(rgb.green)
-		                         , st7789_6bit_colour_index_to_byte(rgb.blue) };
-		st7789_fill_screen(st7789_driver, spi_tx_reg, colour_args);
+		st7789_fill_screen(st7789_driver, spi_tx_reg, rgb, bpp);
 	}
 
 	st7789_send_command(st7789_driver, spi_tx_reg, DISPON);
@@ -375,7 +371,8 @@ void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
 
 void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
-                       , uint8_t* colour_args)
+                       , struct RawRgbInput rgb_input
+                       , enum BitsPerPixel bpp)
 {
 	// set_screen_size() must be called before
 	// RASET/CASET require a -1 as they are zero indexed
@@ -390,7 +387,7 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
 	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
 	for (int y = 0; y < (int) y_end; ++y) {
 		for (int x = 0; x < (int) x_end; ++x) {
-			st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
+			st7789_set_pixel_colour(st7789_driver, spi_tx_reg, rgb_input, bpp);
 		}
 	}
 }

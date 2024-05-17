@@ -811,10 +811,11 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	unsigned int y_pixels = st7789_fill->input.pixels.total_y;
 	set_screen_size(&some_st7789.screen_size, x_pixels, y_pixels);
 	unsigned int total_pixels = x_pixels * y_pixels;
-	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.red)
-                             , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.green)
-                             , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.blue) };
-	st7789_fill_screen(&some_st7789, &some_spi_data_reg, colour_args);
+	uint8_t expected_data[3] = { st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.red)
+                               , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.green)
+                               , st7789_6bit_colour_index_to_byte(st7789_fill->input.rgb.blue) };
+
+	st7789_fill_screen(&some_st7789, &some_spi_data_reg, st7789_fill->input.rgb, Pixel18);
 
 	// 10 calls = raset/caset + args, 1 for RAMWRC, 3 per pixel
 	ASSERT_EQ_FMT(3 * total_pixels + 11, trigger_spi_byte_transfer_fake.call_count, "%u");
@@ -833,7 +834,7 @@ TEST test_st7789_fill_screen_18_bit_colour(const struct LoopTestSt7789FillColour
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, x_pixels - 1, End));
-	CHECK_CALL(check_repeated_tx_data(starting_block + 10, colour_args, 3));
+	CHECK_CALL(check_repeated_tx_data(starting_block + 10, expected_data, 3));
 	PASS();
 }
 
