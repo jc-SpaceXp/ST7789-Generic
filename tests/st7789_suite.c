@@ -702,28 +702,30 @@ void loop_test_output_pixel_depths(void)
 	}
 }
 
-TEST test_st7789_correct_rgb666_format(const struct LoopTestSt7789RgbPixelInfo* st7789_bpp)
+TEST test_st7789_correct_rgb666_format(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
-	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_bpp->rgb, st7789_bpp->bpp);
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_pixel->rgb
+	                                                              , st7789_pixel->bpp);
 
 	ASSERT_EQ_FMT(3, test_rgb_format.rgb666.total_bytes, "%u");
-	ASSERT_EQ_FMT(st7789_bpp->expected[0], test_rgb_format.rgb666.bytes[0], "%u\n");
-	ASSERT_EQ_FMT(st7789_bpp->expected[1], test_rgb_format.rgb666.bytes[1], "%u\n");
-	ASSERT_EQ_FMT(st7789_bpp->expected[2], test_rgb_format.rgb666.bytes[2], "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->expected[0], test_rgb_format.rgb666.bytes[0], "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->expected[1], test_rgb_format.rgb666.bytes[1], "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->expected[2], test_rgb_format.rgb666.bytes[2], "%u\n");
 	PASS();
 }
 
-TEST test_st7789_correct_rgb565_format(const struct LoopTestSt7789RgbPixelInfo* st7789_bpp)
+TEST test_st7789_correct_rgb565_format(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
-	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_bpp->rgb, st7789_bpp->bpp);
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_pixel->rgb
+	                                                              , st7789_pixel->bpp);
 
 	ASSERT_EQ_FMT(2, test_rgb_format.rgb565.total_bytes, "%u");
-	ASSERT_EQ_FMT(st7789_bpp->rgb.red & 0x1F, test_rgb_format.rgb565.bytes[0] >> 3, "%u\n");
-	ASSERT_EQ_FMT(st7789_bpp->rgb.green & 0x3F
+	ASSERT_EQ_FMT(st7789_pixel->rgb.red & 0x1F, test_rgb_format.rgb565.bytes[0] >> 3, "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->rgb.green & 0x3F
 	             , ((test_rgb_format.rgb565.bytes[0] & 0x07) << 3)
 	               | ((test_rgb_format.rgb565.bytes[1] & 0xE0) >> 5)
 	             , "%u\n");
-	ASSERT_EQ_FMT(st7789_bpp->rgb.blue & 0x1F, test_rgb_format.rgb565.bytes[1] & 0x1F, "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->rgb.blue & 0x1F, test_rgb_format.rgb565.bytes[1] & 0x1F, "%u\n");
 	PASS();
 }
 
@@ -734,7 +736,7 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		, {0xFF, 0xFF, 0xFF}
 		, {0x72, 0x44, 0x12}
 	};
-	const struct LoopTestSt7789RgbPixelInfo st7789_bpp[4] = {
+	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[4] = {
 		// Pixel,  RgbInput, ExpectedOutput
 		{ Pixel18, test_rgb[0]
 		           , { (test_rgb[0].red << 2) & 0xFF
@@ -759,10 +761,10 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		RUN_TEST1(snprintf_return_val, sn_error);
 
 		greatest_set_test_suffix((const char*) &test_suffix);
-		if (st7789_bpp[i].bpp == Pixel18) {
-			RUN_TEST1(test_st7789_correct_rgb666_format, &st7789_bpp[i]);
-		} else if (st7789_bpp[i].bpp == Pixel16) {
-			RUN_TEST1(test_st7789_correct_rgb565_format, &st7789_bpp[i]);
+		if (st7789_pixel[i].bpp == Pixel18) {
+			RUN_TEST1(test_st7789_correct_rgb666_format, &st7789_pixel[i]);
+		} else if (st7789_pixel[i].bpp == Pixel16) {
+			RUN_TEST1(test_st7789_correct_rgb565_format, &st7789_pixel[i]);
 		}
 	}
 }
