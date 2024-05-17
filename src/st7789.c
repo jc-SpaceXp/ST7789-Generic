@@ -345,6 +345,10 @@ union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPe
 		// Format: RRRR RGGG GGGB BBBB (keep lowest 5/6 bits for each channel)
 		rgb_st7789.rgb565.bytes[0] = ((rgb.red & 0x1F) << 3)   | ((rgb.green & 0x38) >> 3);
 		rgb_st7789.rgb565.bytes[1] = ((rgb.green & 0x07) << 5) | (rgb.blue & 0x1F);
+	} else if (bpp == Pixel12) {
+		// Format: RRRR GGGG BBBB xxxx (keep lowest 4 bits for each channel)
+		rgb_st7789.rgb444.bytes[0] = ((rgb.red & 0x0F) << 4)  | (rgb.green & 0x0F);
+		rgb_st7789.rgb444.bytes[1] = (rgb.blue & 0x0F) << 4;
 	}
 
 	return rgb_st7789;

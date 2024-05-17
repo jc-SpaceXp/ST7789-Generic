@@ -730,6 +730,18 @@ TEST test_st7789_correct_rgb565_format(const struct LoopTestSt7789RgbPixelInfo* 
 	PASS();
 }
 
+TEST test_st7789_correct_rgb444_format(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
+{
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(st7789_pixel->rgb
+	                                                              , st7789_pixel->bpp);
+
+	ASSERT_EQ_FMT(2, test_rgb_format.rgb444.total_bytes, "%u");
+	ASSERT_EQ_FMT(st7789_pixel->rgb.red & 0x0F, test_rgb_format.rgb444.bytes[0] >> 4, "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->rgb.green & 0x0F, test_rgb_format.rgb444.bytes[0] & 0x0F, "%u\n");
+	ASSERT_EQ_FMT(st7789_pixel->rgb.blue & 0x0F, test_rgb_format.rgb444.bytes[1] >> 4, "%u\n");
+	PASS();
+}
+
 void loop_test_rgb_inputs_to_st7789_formats(void)
 {
 	struct RawRgbInput test_rgb[3] = {
@@ -737,7 +749,7 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		, {0xFF, 0xFF, 0xFF}
 		, {0x72, 0x44, 0x12}
 	};
-	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[4] = {
+	const struct LoopTestSt7789RgbPixelInfo st7789_pixel[6] = {
 		// Pixel,  RgbInput, ExpectedOutput
 		{ Pixel18, test_rgb[0]
 		           , { (test_rgb[0].red << 2) & 0xFF
@@ -752,6 +764,9 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 		, { Pixel16, test_rgb[2], { 0x90, 0x92, 0x00 } }
 		// Pixel16 RG565 takes lowest 5/6 bits from rgb channels
 		// expected data is ignored (see 565 unit test)
+		, { Pixel12, test_rgb[1], { 0xFF, 0xFF, 0x00 } }
+		, { Pixel12, test_rgb[2], { 0x90, 0x92, 0x00 } }
+		// expected data is ignored (see 444 unit test)
 	};
 
 	for (int i = 0; i < 4; ++i) {
@@ -766,6 +781,8 @@ void loop_test_rgb_inputs_to_st7789_formats(void)
 			RUN_TEST1(test_st7789_correct_rgb666_format, &st7789_pixel[i]);
 		} else if (st7789_pixel[i].bpp == Pixel16) {
 			RUN_TEST1(test_st7789_correct_rgb565_format, &st7789_pixel[i]);
+		} else if (st7789_pixel[i].bpp == Pixel12) {
+			RUN_TEST1(test_st7789_correct_rgb444_format, &st7789_pixel[i]);
 		}
 	}
 }
