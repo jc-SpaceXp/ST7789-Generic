@@ -380,10 +380,14 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
 	unsigned int x_end = st7789_driver->screen_size.x;
 	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end - 1);
 
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
+	uint8_t* args = &rgb_format.rgb888.bytes[0];
+	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
+
 	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
 	for (int y = 0; y < (int) y_end; ++y) {
 		for (int x = 0; x < (int) x_end; ++x) {
-			st7789_set_pixel_colour(st7789_driver, spi_tx_reg, rgb_input, bpp);
+			st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
 		}
 	}
 }
