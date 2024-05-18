@@ -131,9 +131,6 @@ void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
                             , volatile uint32_t* spi_tx_reg
                             , struct RawRgbInput rgb_input
                             , enum BitsPerPixel bpp);
-void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
-                                   , volatile uint32_t* spi_tx_reg
-                                   , uint8_t* colour_args);
 
 void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg

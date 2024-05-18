@@ -325,13 +325,6 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
 	st7789_set_x_or_y_region(st7789_driver, spi_tx_reg, TxRaset, y_start, y_end);
 }
 
-void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
-                                   , volatile uint32_t* spi_tx_reg
-                                   , uint8_t* colour_args)
-{
-	st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
-}
-
 union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPerPixel bpp)
 {
 	union RgbInputFormat rgb_st7789;

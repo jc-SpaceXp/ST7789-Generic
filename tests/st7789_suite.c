@@ -634,29 +634,6 @@ void loop_test_all_bits_per_pixel_formats(void)
 	}
 }
 
-TEST test_st7789_write_18_bit_colour_to_specific_pixel(void)
-{
-	// CASET and RASET would have been called before
-	unsigned int r_col = 0x14; // 01 0100: 6 --> 0101 0000 8 bits
-	unsigned int g_col = 0x0A; // 00 1010: 6 --> 0010 1000 8 bits
-	unsigned int b_col = 0x85; // 00 0101: 6 --> 0001 0100 8 bits
-	uint8_t expected_data[3] = { 0x50, 0x28, 0x14 };
-	// 01 0100 0010 1000 0101: 0x14285
-	unsigned int frame_18_bit_col = (r_col << 12) | (g_col << 6) | b_col;
-	ASSERT_EQ(frame_18_bit_col, 0x14285); // what the internal frame mem should read (666 RGB)
-	// For 18-bit colour the 666 RGB format will be sent over as 3 bytes
-	// with each colour having the lowest two bits padded with zero's
-	uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(r_col)
-                             , st7789_6bit_colour_index_to_byte(g_col)
-                             , st7789_6bit_colour_index_to_byte(b_col) };
-	st7789_set_18_bit_pixel_colour(&some_st7789, &some_spi_data_reg, colour_args);
-
-
-	ASSERT_EQ(trigger_spi_byte_transfer_fake.call_count, 3);
-	CHECK_CALL(check_repeated_tx_data(0, expected_data, 3));
-	PASS();
-}
-
 TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
 	// CASET and RASET would have been called before
@@ -957,7 +934,6 @@ SUITE(st7789_driver)
 	RUN_TEST(test_st7789_commands_with_four_args);
 	loop_test_all_bits_per_pixel_formats();
 	loop_test_rgb_inputs_to_st7789_formats();
-	RUN_TEST(test_st7789_write_18_bit_colour_to_specific_pixel);
 	loop_test_output_pixel_depths();
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 	loop_test_st7789_fill_screen();
