@@ -31,6 +31,8 @@ struct St7789Internals {
 	struct St7789Modes st7789_mode;
 	struct St7789Size screen_size;
 
+	enum BitsPerPixel pixel_depth;
+
 	struct UserCallbacksSt7789 user_defined;
 };
 

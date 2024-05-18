@@ -32,6 +32,25 @@ struct RawRgbInput {
 	unsigned int blue;
 };
 
+union RgbInputFormat {
+	struct Bpp24 {
+		unsigned int total_bytes;
+		uint8_t bytes[3];
+	} rgb888;
+	struct Bpp18 {
+		unsigned int total_bytes;
+		uint8_t bytes[3];
+	} rgb666;
+	struct Bpp16 {
+		unsigned int total_bytes;
+		uint8_t bytes[2];
+	} rgb565;
+	struct Bpp12 {
+		unsigned int total_bytes;
+		uint8_t bytes[2];
+	} rgb444;
+};
+
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
@@ -47,7 +66,7 @@ enum TxCasetOrRaset { TxCaset, TxRaset, TxXpos, TxYpos };
 
 enum InitInversion { InvertOff, InvertOn };
 enum FillScreenRegion { IgnoreRegion, FillRegion };
-enum BitsPerPixel { Pixel12, Pixel16, Pixel16M, Pixel18 };
+enum BitsPerPixel { Pixel12, Pixel16, Pixel18, Pixel24, Pixel16M };
 
 // CASET and RASET should use these funcions
 uint8_t get_upper_byte(uint16_t data);
@@ -104,12 +123,18 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , enum InitInversion invert
                          , enum FillScreenRegion screen_region
                          , struct St7789Size init_size
-                         , struct RawRgbInput rgb);
-void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
-                                   , volatile uint32_t* spi_tx_reg
-                                   , uint8_t* colour_args);
+                         , struct RawRgbInput rgb
+                         , enum BitsPerPixel bpp);
+
+union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPerPixel bpp);
+void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
+                            , volatile uint32_t* spi_tx_reg
+                            , struct RawRgbInput rgb_input
+                            , enum BitsPerPixel bpp);
 
 void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
-                       , uint8_t* colour_args);
+                       , struct RawRgbInput rgb
+                       , enum BitsPerPixel bpp);
+
 #endif /* ST7789_H */

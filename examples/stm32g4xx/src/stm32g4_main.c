@@ -38,9 +38,8 @@ int main (void)
 
 	struct St7789Size init_xy_size = { 240, 320 };
 
-	// write a colour to the whole screen, converted to RGB 666
 	struct RawRgbInput rgb = { 170, 128, 255 };
-	st7789_init_sequence(&st7789, &SPI1->DR, InvertOn, FillRegion, init_xy_size, rgb);
+	st7789_init_sequence(&st7789, &SPI1->DR, InvertOn, FillRegion, init_xy_size, rgb, Pixel18);
 
 	return 0;
 }

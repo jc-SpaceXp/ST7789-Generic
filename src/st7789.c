@@ -137,18 +137,20 @@ void st7789_set_input_colour_format(struct St7789Internals* st7789_driver
 	// typically the LUT is for the 18-bit output (18 on reset for both input/output)
 	// input is refered to as the colour interface in the datasheet
 	uint8_t data = 0;
-	if (bpp == Pixel18) {
+	if ((bpp == Pixel24) || (bpp == Pixel16M)) {
+		data |= 0x07;
+	} else if (bpp == Pixel18) {
 		data |= 0x06;
 	} else if (bpp == Pixel16) {
 		data |= 0x05;
-	} else if (bpp == Pixel16M) {
-		data |= 0x07;
 	} else if (bpp == Pixel12) {
 		data |= 0x03;
 	}
 
 	st7789_send_command(st7789_driver, spi_tx_reg, COLMOD);
 	st7789_send_data(st7789_driver, spi_tx_reg, data);
+
+	st7789_driver->pixel_depth = bpp;
 }
 
 void st7789_hw_reset(struct St7789Internals* st7789_driver)
@@ -263,12 +265,14 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
                          , enum InitInversion invert
                          , enum FillScreenRegion screen_region
                          , struct St7789Size init_size
-                         , struct RawRgbInput rgb)
+                         , struct RawRgbInput rgb
+                         , enum BitsPerPixel bpp)
 {
 	void delay_ms(unsigned int ms_delay) {
 		st7789_driver->user_defined.delay_us(1000 * ms_delay);
 	}
 	set_screen_size(&st7789_driver->screen_size, init_size.x, init_size.y);
+	st7789_driver->pixel_depth = Pixel18; // 18-bits per pixel on reset
 	// Initial modes are:
 	// SPLIN, DISPOFF, NORMAL MODE, IDLE OFF
 	st7789_power_on_sequence(st7789_driver, spi_tx_reg);
@@ -276,13 +280,12 @@ void st7789_init_sequence(struct St7789Internals* st7789_driver
 	delay_ms(120);
 	// Optionally invert screen, necessary for some screens to display correct colour
 	if (invert == InvertOn) { st7789_send_command(st7789_driver, spi_tx_reg, INVON); }
+	if (bpp != Pixel18) {
+		st7789_set_input_colour_format(st7789_driver, spi_tx_reg, bpp);
+	}
 	// Set screen size and set a colour
 	if (screen_region == FillRegion) {
-		// Assumes 18-bit colour for now
-		uint8_t colour_args[3] = { st7789_6bit_colour_index_to_byte(rgb.red)
-		                         , st7789_6bit_colour_index_to_byte(rgb.green)
-		                         , st7789_6bit_colour_index_to_byte(rgb.blue) };
-		st7789_fill_screen(st7789_driver, spi_tx_reg, colour_args);
+		st7789_fill_screen(st7789_driver, spi_tx_reg, rgb, bpp);
 	}
 
 	st7789_send_command(st7789_driver, spi_tx_reg, DISPON);
@@ -322,16 +325,50 @@ void st7789_set_y_coordinates(struct St7789Internals* st7789_driver
 	st7789_set_x_or_y_region(st7789_driver, spi_tx_reg, TxRaset, y_start, y_end);
 }
 
-void st7789_set_18_bit_pixel_colour(struct St7789Internals* st7789_driver
-                                   , volatile uint32_t* spi_tx_reg
-                                   , uint8_t* colour_args)
+union RgbInputFormat rgb_to_st7789_formatter(struct RawRgbInput rgb, enum BitsPerPixel bpp)
 {
-	st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
+	union RgbInputFormat rgb_st7789;
+	rgb_st7789.rgb666.total_bytes = 2;
+	if ((bpp == Pixel24) || (bpp == Pixel16M)) {
+		rgb_st7789.rgb888.bytes[0] = (uint8_t) rgb.red;
+		rgb_st7789.rgb888.bytes[1] = (uint8_t) rgb.green;
+		rgb_st7789.rgb888.bytes[2] = (uint8_t) rgb.blue;
+		rgb_st7789.rgb888.total_bytes = 3;
+	} else if (bpp == Pixel18) {
+		rgb_st7789.rgb666.bytes[0] = st7789_6bit_colour_index_to_byte(rgb.red);
+		rgb_st7789.rgb666.bytes[1] = st7789_6bit_colour_index_to_byte(rgb.green);
+		rgb_st7789.rgb666.bytes[2] = st7789_6bit_colour_index_to_byte(rgb.blue);
+		rgb_st7789.rgb666.total_bytes = 3;
+	} else if (bpp == Pixel16) {
+		// Format: RRRR RGGG GGGB BBBB (keep lowest 5/6 bits for each channel)
+		rgb_st7789.rgb565.bytes[0] = ((rgb.red & 0x1F) << 3)   | ((rgb.green & 0x38) >> 3);
+		rgb_st7789.rgb565.bytes[1] = ((rgb.green & 0x07) << 5) | (rgb.blue & 0x1F);
+	} else if (bpp == Pixel12) {
+		// Format: RRRR GGGG BBBB xxxx (keep lowest 4 bits for each channel)
+		rgb_st7789.rgb444.bytes[0] = ((rgb.red & 0x0F) << 4)  | (rgb.green & 0x0F);
+		rgb_st7789.rgb444.bytes[1] = (rgb.blue & 0x0F) << 4;
+	}
+
+	return rgb_st7789;
+}
+
+void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
+                            , volatile uint32_t* spi_tx_reg
+                            , struct RawRgbInput rgb_input
+                            , enum BitsPerPixel bpp)
+{
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
+
+	// Can refer to any struct as memory locations for these pointers will be the same
+	uint8_t* args = &rgb_format.rgb888.bytes[0];
+	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
+	st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
 }
 
 void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
-                       , uint8_t* colour_args)
+                       , struct RawRgbInput rgb_input
+                       , enum BitsPerPixel bpp)
 {
 	// set_screen_size() must be called before
 	// RASET/CASET require a -1 as they are zero indexed
@@ -343,10 +380,14 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
 	unsigned int x_end = st7789_driver->screen_size.x;
 	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, x_start, x_end - 1);
 
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
+	uint8_t* args = &rgb_format.rgb888.bytes[0];
+	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
+
 	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
 	for (int y = 0; y < (int) y_end; ++y) {
 		for (int x = 0; x < (int) x_end; ++x) {
-			st7789_send_data_via_array(st7789_driver, spi_tx_reg, colour_args, 3, TxContinue);
+			st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
 		}
 	}
 }
