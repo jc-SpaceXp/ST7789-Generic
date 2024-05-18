@@ -357,23 +357,11 @@ void st7789_set_pixel_colour(struct St7789Internals* st7789_driver
                             , struct RawRgbInput rgb_input
                             , enum BitsPerPixel bpp)
 {
-	uint8_t* args = NULL;
-	unsigned int total_bytes = 0;
 	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
-	if ((bpp == Pixel24) || (bpp == Pixel16M)) {
-		args = &rgb_format.rgb888.bytes[0];
-		total_bytes = rgb_format.rgb888.total_bytes;
-	} else if (bpp == Pixel18) {
-		args = &rgb_format.rgb666.bytes[0];
-		total_bytes = rgb_format.rgb666.total_bytes;
-	} else if (bpp == Pixel16) {
-		args = &rgb_format.rgb565.bytes[0];
-		total_bytes = rgb_format.rgb565.total_bytes;
-	} else if (bpp == Pixel12) {
-		args = &rgb_format.rgb444.bytes[0];
-		total_bytes = rgb_format.rgb444.total_bytes;
-	}
 
+	// Can refer to any struct as memory locations for these pointers will be the same
+	uint8_t* args = &rgb_format.rgb888.bytes[0];
+	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
 	st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
 }
 

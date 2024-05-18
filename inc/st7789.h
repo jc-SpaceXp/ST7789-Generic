@@ -34,20 +34,20 @@ struct RawRgbInput {
 
 union RgbInputFormat {
 	struct Bpp24 {
-		uint8_t bytes[3];
 		unsigned int total_bytes;
+		uint8_t bytes[3];
 	} rgb888;
 	struct Bpp18 {
-		uint8_t bytes[3];
 		unsigned int total_bytes;
+		uint8_t bytes[3];
 	} rgb666;
 	struct Bpp16 {
-		uint8_t bytes[2];
 		unsigned int total_bytes;
+		uint8_t bytes[2];
 	} rgb565;
 	struct Bpp12 {
-		uint8_t bytes[2];
 		unsigned int total_bytes;
+		uint8_t bytes[2];
 	} rgb444;
 };
 
