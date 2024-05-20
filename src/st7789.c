@@ -391,3 +391,11 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
 		}
 	}
 }
+
+void st7789_set_region(struct St7789Internals* st7789_driver
+                      , volatile uint32_t* spi_tx_reg
+                      , struct RegionInput region)
+{
+	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, region.x.start, region.x.end - 1);
+	st7789_set_y_coordinates(st7789_driver, spi_tx_reg, region.y.start, region.y.end - 1);
+}

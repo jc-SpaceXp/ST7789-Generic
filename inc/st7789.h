@@ -26,6 +26,13 @@
 #define WRMEMC  0x3C
 #define RAMWRC  WRMEMC
 
+struct RegionInput {
+	struct {
+		unsigned int start;
+		unsigned int end;
+	} x, y;
+};
+
 struct RawRgbInput {
 	unsigned int red;
 	unsigned int green;
@@ -136,5 +143,8 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
                        , volatile uint32_t* spi_tx_reg
                        , struct RawRgbInput rgb
                        , enum BitsPerPixel bpp);
+void st7789_set_region(struct St7789Internals* st7789_driver
+                      , volatile uint32_t* spi_tx_reg
+                      , struct RegionInput region);
 
 #endif /* ST7789_H */

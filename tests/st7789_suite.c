@@ -915,6 +915,42 @@ void loop_test_st7789_fill_screen(void)
 	}
 }
 
+TEST set_region_bounds(const struct RegionInput test_regions)
+{
+	st7789_set_region(&some_st7789, &some_spi_data_reg, test_regions);
+
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	ASSERTm("RASET not called?", raset_cmd_index != -5);
+	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_regions.y.start, Start));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_regions.x.start, Start));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_regions.y.end - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_regions.x.end - 1, End));
+	PASS();
+}
+
+void loop_test_st7789_set_region(void)
+{
+	struct RegionInput test_regions[4] = {
+		{ { 0, 10 }, {0, 10} }
+		, { { 30, 250 }, {188, 199} }
+		, { { 23, 9 }, {18, 319} } // No checks are performed, end >= start for st7789
+		, { { 110, 111 }, {91, 40199} } // Writes to out of bounds values are ignored e.g. >= 319 or 239
+	};
+
+	for (int i = 0; i < 4; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(set_region_bounds, test_regions[i]);
+	}
+}
+
 
 SUITE(st7789_driver)
 {
@@ -937,6 +973,7 @@ SUITE(st7789_driver)
 	loop_test_output_pixel_depths();
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 	loop_test_st7789_fill_screen();
+	loop_test_st7789_set_region();
 }
 
 SUITE(st7789_driver_modes_transitions)
