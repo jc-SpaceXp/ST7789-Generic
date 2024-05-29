@@ -280,12 +280,10 @@ static enum greatest_test_res check_repeated_tx_data(unsigned int start
                                                     , unsigned int length)
 {
 	// repeat_count is zero indexed
-	for (unsigned int r = 0; r <= repeat_count; ++r) {
-		for (unsigned int i = 0; i < length; ++i) {
-			ASSERT_EQ_FMT(expected_stream[i]
-		                 , trigger_spi_byte_transfer_fake.arg1_history[start + i]
-		                 , "%.2X");
-		}
+	for (unsigned int i = 0; i <= repeat_count; ++i) {
+		ASSERT_MEM_EQ(expected_stream
+		             , &trigger_spi_byte_transfer_fake.arg1_history[start + (i * length)]
+		             , length);
 	}
 	PASS();
 }
