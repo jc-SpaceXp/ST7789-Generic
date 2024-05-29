@@ -399,3 +399,26 @@ void st7789_set_region(struct St7789Internals* st7789_driver
 	st7789_set_x_coordinates(st7789_driver, spi_tx_reg, region.x.start, region.x.end - 1);
 	st7789_set_y_coordinates(st7789_driver, spi_tx_reg, region.y.start, region.y.end - 1);
 }
+
+void st7789_fill_region(struct St7789Internals* st7789_driver
+                       , volatile uint32_t* spi_tx_reg
+                       , struct RegionInput region
+                       , struct RawRgbInput rgb_input
+                       , enum BitsPerPixel bpp)
+{
+
+	st7789_set_region(st7789_driver, spi_tx_reg, region);
+
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_input, bpp);
+	uint8_t* args = &rgb_format.rgb888.bytes[0];
+	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
+
+	st7789_send_command(st7789_driver, spi_tx_reg, RAMWR);
+	for (int y = region.y.start; y < (int) region.y.end; ++y) {
+		for (int x = region.x.start; x < (int) region.x.end; ++x) {
+			st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
+		}
+	}
+	// N arg commands are terminated once another command is sent
+	st7789_send_command(st7789_driver, spi_tx_reg, NOP);
+}
