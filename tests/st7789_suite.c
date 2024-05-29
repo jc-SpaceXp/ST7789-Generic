@@ -982,10 +982,8 @@ TEST fill_region(const struct LoopTestSt7789FillRegion fill_region)
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, fill_region.region.x.end - 1, End));
 	CHECK_CALL(tx_byte_was_sent(RAMWR, true));
 	CHECK_CALL(tx_byte_was_sent(RAMWRC, false)); // Must be RAMWR, RAWRC doesn't start @ raset/caset args
-	CHECK_CALL(tx_byte_was_sent(NOP, true)); // command which signals end of colour args
 	int x_pixels = fill_region.region.x.end - fill_region.region.x.start;
 	int y_pixels = fill_region.region.y.end - fill_region.region.y.start;
-	int nop_cmd_index = get_first_command_id_index(NOP); // if any arg is 0 (0 == NOP) then this is accidently sent
 	// Only check colour args being sent if both are non-zero
 	if ((x_pixels > 0) && (y_pixels > 0)) {
 		unsigned int args_repeats = x_pixels * y_pixels;
