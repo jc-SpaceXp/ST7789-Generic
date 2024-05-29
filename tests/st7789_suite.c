@@ -65,7 +65,6 @@ struct LoopTestSt7789FillColour {
 		struct RawRgbInput rgb;
 		enum BitsPerPixel bpp;
 	} input;
-	unsigned int starting_block_index;
 };
 
 struct LoopTestSt7789FillRegion {
@@ -846,7 +845,6 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 
 TEST test_st7789_fill_screen(const struct LoopTestSt7789FillColour* st7789_fill)
 {
-	unsigned int starting_block = st7789_fill->starting_block_index;
 	unsigned int x_pixels = st7789_fill->input.pixels.total_x;
 	unsigned int y_pixels = st7789_fill->input.pixels.total_y;
 	set_screen_size(&some_st7789.screen_size, x_pixels, y_pixels);
@@ -890,39 +888,26 @@ void loop_test_st7789_fill_screen(void)
 {
 	unsigned int x_pixels = 6;
 	unsigned int y_pixels = 2;
-	struct RawRgbInput test_rgb[8] = {
-		{ 0x36, 0x0F, 0xC1 }
-		, { 0x36, 0x0F, 0xC1 }
-		, { 0x36, 0x0F, 0xC1 }
-		, { 0x36, 0x0F, 0xC1 }
-		, { 0xDE, 0x69, 0xA2 }
-		, { 0xDE, 0x69, 0xA2 }
-		, { 0xDE, 0x69, 0xA2 }
-		, { 0xDE, 0x69, 0xA2 }
+	const struct LoopTestSt7789FillColour st7789_fill[8] = {
+		{ {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel24} }
+		, { {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel18} }
+		, { {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel16} }
+		, { {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel12} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel16M} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel18} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel16} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel12} }
 	};
-	enum BitsPerPixel test_bpp[8] = {
-		Pixel24, Pixel18, Pixel16, Pixel12
-		, Pixel16M, Pixel18, Pixel16, Pixel12 };
-	unsigned int total_pixels = x_pixels * y_pixels;
 
 	for (unsigned int i = 0; i < 8; ++i) {
-		unsigned data_offset = 3;
-		if ((test_bpp[i] == Pixel12) || (test_bpp[i] == Pixel16)) {
-			data_offset = 2;
-		}
-		for (unsigned int pix = 0; pix < total_pixels; ++pix) {
-			const struct LoopTestSt7789FillColour st7789_fill = {
-				{{x_pixels, y_pixels}, test_rgb[i], test_bpp[i]}, pix * data_offset + 1
-			};
-			char test_suffix[20];
-			int sn = snprintf(test_suffix, 20, "test%u:block_%u", i, pix);
-			bool sn_error = (sn > 21) || (sn < 0);
-			greatest_set_test_suffix((const char*) &test_suffix);
-			RUN_TEST1(snprintf_return_val, sn_error);
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
 
-			greatest_set_test_suffix((const char*) &test_suffix);
-			RUN_TEST1(test_st7789_fill_screen, &st7789_fill);
-		}
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_st7789_fill_screen, &st7789_fill[i]);
 	}
 }
 
