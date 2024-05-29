@@ -65,7 +65,12 @@ struct LoopTestSt7789FillColour {
 		struct RawRgbInput rgb;
 		enum BitsPerPixel bpp;
 	} input;
-	unsigned int starting_block_index;
+};
+
+struct LoopTestSt7789FillRegion {
+	struct RegionInput region;
+	struct RawRgbInput rgb;
+	enum BitsPerPixel bpp;
 };
 
 enum RasetCasetStartOrEnd { Start, End };
@@ -270,13 +275,15 @@ static enum greatest_test_res tx_byte_was_sent(uint8_t tx_byte, bool expected)
 }
 
 static enum greatest_test_res check_repeated_tx_data(unsigned int start
+                                                    , unsigned int repeat_count
                                                     , uint8_t* expected_stream
                                                     , unsigned int length)
 {
-	for (unsigned int i = 0; i < length; ++i) {
-		ASSERT_EQ_FMT(expected_stream[i]
-		             , trigger_spi_byte_transfer_fake.arg1_history[start + i]
-		             , "%.2X");
+	// repeat_count is zero indexed
+	for (unsigned int i = 0; i <= repeat_count; ++i) {
+		ASSERT_MEM_EQ(expected_stream
+		             , &trigger_spi_byte_transfer_fake.arg1_history[start + (i * length)]
+		             , length);
 	}
 	PASS();
 }
@@ -636,6 +643,8 @@ void loop_test_all_bits_per_pixel_formats(void)
 
 TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
+	unsigned int tx_start_index = 0;
+	unsigned int args_repeats = 0;
 	// CASET and RASET would have been called before
 	unsigned int total_tx_bytes = 3;
 	if ((st7789_pixel->bpp == Pixel12) || (st7789_pixel->bpp == Pixel16)) {
@@ -651,7 +660,8 @@ TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPi
 	ASSERT_MEM_EQ(expected_data.rgb666.bytes, expected_data.rgb565.bytes, 2);
 	ASSERT_MEM_EQ(expected_data.rgb565.bytes, expected_data.rgb444.bytes, 2);
 	ASSERT_MEM_EQ(expected_data.rgb888.bytes, expected_data.rgb666.bytes, 2);
-	CHECK_CALL(check_repeated_tx_data(0, expected_data.rgb666.bytes, total_tx_bytes));
+	CHECK_CALL(check_repeated_tx_data(tx_start_index, args_repeats
+	                                 , expected_data.rgb666.bytes, total_tx_bytes));
 	PASS();
 }
 
@@ -816,6 +826,7 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
                              , st7789_6bit_colour_index_to_byte(g_col)
                              , st7789_6bit_colour_index_to_byte(b_col) };
 	unsigned int total_args = 10;
+	unsigned int tx_start_index = 0;
 	for (unsigned int i = 0; i < total_args; ++i) {
 		st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3, TxContinue);
 	}
@@ -827,15 +838,14 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
 	for (unsigned int i = 0; i < total_args; ++i) {
-		CHECK_CALL(check_repeated_tx_data(i * 3, expected_data, 3));
 		ASSERT_NEQ(assert_spi_pin_fake.arg1_history[i], 15); // CS should still be low
 	}
+	CHECK_CALL(check_repeated_tx_data(tx_start_index, total_args - 1, expected_data, 3));
 	PASS();
 }
 
 TEST test_st7789_fill_screen(const struct LoopTestSt7789FillColour* st7789_fill)
 {
-	unsigned int starting_block = st7789_fill->starting_block_index;
 	unsigned int x_pixels = st7789_fill->input.pixels.total_x;
 	unsigned int y_pixels = st7789_fill->input.pixels.total_y;
 	set_screen_size(&some_st7789.screen_size, x_pixels, y_pixels);
@@ -871,7 +881,8 @@ TEST test_st7789_fill_screen(const struct LoopTestSt7789FillColour* st7789_fill)
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, x_pixels - 1, End));
-	CHECK_CALL(check_repeated_tx_data(starting_block + 10, expected_data, total_tx_bytes));
+	CHECK_CALL(check_repeated_tx_data(ramwrc_cmd_index + 1
+	                                 , total_pixels - 1, expected_data, total_tx_bytes));
 	PASS();
 }
 
@@ -879,39 +890,125 @@ void loop_test_st7789_fill_screen(void)
 {
 	unsigned int x_pixels = 6;
 	unsigned int y_pixels = 2;
-	struct RawRgbInput test_rgb[8] = {
-		{ 0x36, 0x0F, 0xC1 }
-		, { 0x36, 0x0F, 0xC1 }
-		, { 0x36, 0x0F, 0xC1 }
-		, { 0x36, 0x0F, 0xC1 }
-		, { 0xDE, 0x69, 0xA2 }
-		, { 0xDE, 0x69, 0xA2 }
-		, { 0xDE, 0x69, 0xA2 }
-		, { 0xDE, 0x69, 0xA2 }
+	const struct LoopTestSt7789FillColour st7789_fill[8] = {
+		{ {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel24} }
+		, { {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel18} }
+		, { {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel16} }
+		, { {{x_pixels, y_pixels}, { 0x36, 0x0F, 0xC1 }, Pixel12} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel16M} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel18} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel16} }
+		, { {{x_pixels, y_pixels}, { 0xDE, 0x69, 0xA2 }, Pixel12} }
 	};
-	enum BitsPerPixel test_bpp[8] = {
-		Pixel24, Pixel18, Pixel16, Pixel12
-		, Pixel16M, Pixel18, Pixel16, Pixel12 };
-	unsigned int total_pixels = x_pixels * y_pixels;
 
 	for (unsigned int i = 0; i < 8; ++i) {
-		unsigned data_offset = 3;
-		if ((test_bpp[i] == Pixel12) || (test_bpp[i] == Pixel16)) {
-			data_offset = 2;
-		}
-		for (unsigned int pix = 0; pix < total_pixels; ++pix) {
-			const struct LoopTestSt7789FillColour st7789_fill = {
-				{{x_pixels, y_pixels}, test_rgb[i], test_bpp[i]}, pix * data_offset + 1
-			};
-			char test_suffix[20];
-			int sn = snprintf(test_suffix, 20, "test%u:block_%u", i, pix);
-			bool sn_error = (sn > 21) || (sn < 0);
-			greatest_set_test_suffix((const char*) &test_suffix);
-			RUN_TEST1(snprintf_return_val, sn_error);
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
 
-			greatest_set_test_suffix((const char*) &test_suffix);
-			RUN_TEST1(test_st7789_fill_screen, &st7789_fill);
-		}
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(test_st7789_fill_screen, &st7789_fill[i]);
+	}
+}
+
+TEST set_region_bounds(const struct RegionInput test_regions)
+{
+	st7789_set_region(&some_st7789, &some_spi_data_reg, test_regions);
+
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	ASSERTm("RASET not called?", raset_cmd_index != -5);
+	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_regions.y.start, Start));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_regions.x.start, Start));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_regions.y.end - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_regions.x.end - 1, End));
+	PASS();
+}
+
+void loop_test_st7789_set_region(void)
+{
+	struct RegionInput test_regions[4] = {
+		{ { 0, 10 }, {0, 10} }
+		, { { 30, 250 }, {188, 199} }
+		, { { 23, 9 }, {18, 319} } // No checks are performed, end >= start for st7789
+		, { { 110, 111 }, {91, 40199} } // Writes to out of bounds values are ignored e.g. >= 319 or 239
+	};
+
+	for (int i = 0; i < 4; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(set_region_bounds, test_regions[i]);
+	}
+}
+
+TEST fill_region(const struct LoopTestSt7789FillRegion fill_region)
+{
+	unsigned int total_tx_bytes = 3;
+	if ((fill_region.bpp == Pixel12) || (fill_region.bpp == Pixel16)) {
+		total_tx_bytes = 2;
+	}
+	union RgbInputFormat test_rgb_format = rgb_to_st7789_formatter(fill_region.rgb
+	                                                              , fill_region.bpp);
+	uint8_t expected_data[3] = { test_rgb_format.rgb666.bytes[0]
+                               , test_rgb_format.rgb666.bytes[1]
+                               , test_rgb_format.rgb666.bytes[2] }; // ignored in 2 byte rgb formats
+
+	st7789_fill_region(&some_st7789, &some_spi_data_reg, fill_region.region
+	                  , fill_region.rgb, fill_region.bpp);
+
+	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
+	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
+	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
+	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	int ramwr_cmd_index = get_first_command_id_index(RAMWR);
+	ASSERTm("RASET not called?", raset_cmd_index != -5);
+	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	ASSERTm("RAMWR not called?", ramwr_cmd_index != -5);
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, fill_region.region.y.start, Start));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, fill_region.region.x.start, Start));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, fill_region.region.y.end - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, fill_region.region.x.end - 1, End));
+	CHECK_CALL(tx_byte_was_sent(RAMWR, true));
+	CHECK_CALL(tx_byte_was_sent(RAMWRC, false)); // Must be RAMWR, RAWRC doesn't start @ raset/caset args
+	int x_pixels = fill_region.region.x.end - fill_region.region.x.start;
+	int y_pixels = fill_region.region.y.end - fill_region.region.y.start;
+	// Only check colour args being sent if both are non-zero
+	if ((x_pixels > 0) && (y_pixels > 0)) {
+		unsigned int args_repeats = x_pixels * y_pixels;
+		CHECK_CALL(check_repeated_tx_data(ramwr_cmd_index + 1, args_repeats - 1
+		          , expected_data, total_tx_bytes));
+	}
+	PASS();
+}
+
+void loop_test_st7789_fill_region(void)
+{
+	const struct LoopTestSt7789FillRegion test_regions[4] = {
+		{ {{ 0, 5 }, {0, 2}},      { 100, 99, 4 }, Pixel12 }
+		, { {{ 30, 31 }, {188, 189}}, { 100, 99, 4 }, Pixel12 }
+		, { {{ 23, 9 }, {18, 319}},    { 100, 99, 4 }, Pixel12 }
+		, { {{ 110, 111 }, {319, 324}}, { 100, 99, 4 }, Pixel12 }
+	};
+
+	for (int i = 0; i < 4; ++i) {
+		char test_suffix[5];
+		int sn = snprintf(test_suffix, 4, "%u", i);
+		bool sn_error = (sn > 5) || (sn < 0);
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(snprintf_return_val, sn_error);
+
+		greatest_set_test_suffix((const char*) &test_suffix);
+		RUN_TEST1(fill_region, test_regions[i]);
 	}
 }
 
@@ -937,6 +1034,8 @@ SUITE(st7789_driver)
 	loop_test_output_pixel_depths();
 	RUN_TEST(test_st7789_write_n_args_18_bit_colour);
 	loop_test_st7789_fill_screen();
+	loop_test_st7789_set_region();
+	loop_test_st7789_fill_region();
 }
 
 SUITE(st7789_driver_modes_transitions)
