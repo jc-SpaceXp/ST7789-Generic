@@ -645,6 +645,7 @@ void loop_test_all_bits_per_pixel_formats(void)
 
 TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPixelInfo* st7789_pixel)
 {
+	unsigned int tx_start_index = 0;
 	unsigned int args_repeats = 0;
 	// CASET and RASET would have been called before
 	unsigned int total_tx_bytes = 3;
@@ -661,7 +662,8 @@ TEST test_st7789_write_colour_to_specific_pixel(const struct LoopTestSt7789RgbPi
 	ASSERT_MEM_EQ(expected_data.rgb666.bytes, expected_data.rgb565.bytes, 2);
 	ASSERT_MEM_EQ(expected_data.rgb565.bytes, expected_data.rgb444.bytes, 2);
 	ASSERT_MEM_EQ(expected_data.rgb888.bytes, expected_data.rgb666.bytes, 2);
-	CHECK_CALL(check_repeated_tx_data(0, args_repeats, expected_data.rgb666.bytes, total_tx_bytes));
+	CHECK_CALL(check_repeated_tx_data(tx_start_index, args_repeats
+	                                 , expected_data.rgb666.bytes, total_tx_bytes));
 	PASS();
 }
 
@@ -826,6 +828,7 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
                              , st7789_6bit_colour_index_to_byte(g_col)
                              , st7789_6bit_colour_index_to_byte(b_col) };
 	unsigned int total_args = 10;
+	unsigned int tx_start_index = 0;
 	for (unsigned int i = 0; i < total_args; ++i) {
 		st7789_send_data_via_array(&some_st7789, &some_spi_data_reg, colour_args, 3, TxContinue);
 	}
@@ -837,9 +840,9 @@ TEST test_st7789_write_n_args_18_bit_colour(void)
 	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
 	for (unsigned int i = 0; i < total_args; ++i) {
-		CHECK_CALL(check_repeated_tx_data(i * 3, 0, expected_data, 3));
 		ASSERT_NEQ(assert_spi_pin_fake.arg1_history[i], 15); // CS should still be low
 	}
+	CHECK_CALL(check_repeated_tx_data(tx_start_index, total_args - 1, expected_data, 3));
 	PASS();
 }
 
@@ -880,7 +883,8 @@ TEST test_st7789_fill_screen(const struct LoopTestSt7789FillColour* st7789_fill)
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, x_pixels - 1, End));
-	CHECK_CALL(check_repeated_tx_data(11, total_pixels - 1, expected_data, total_tx_bytes));
+	CHECK_CALL(check_repeated_tx_data(ramwrc_cmd_index + 1
+	                                 , total_pixels - 1, expected_data, total_tx_bytes));
 	PASS();
 }
 
@@ -968,8 +972,10 @@ TEST fill_region(const struct LoopTestSt7789FillRegion fill_region)
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
 	int raset_cmd_index = get_first_command_id_index(RASET);
 	int caset_cmd_index = get_first_command_id_index(CASET);
+	int ramwr_cmd_index = get_first_command_id_index(RAMWR);
 	ASSERTm("RASET not called?", raset_cmd_index != -5);
 	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	ASSERTm("RAMWR not called?", ramwr_cmd_index != -5);
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, fill_region.region.y.start, Start));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, fill_region.region.x.start, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, fill_region.region.y.end - 1, End));
@@ -983,9 +989,8 @@ TEST fill_region(const struct LoopTestSt7789FillRegion fill_region)
 	// Only check colour args being sent if both are non-zero
 	if ((x_pixels > 0) && (y_pixels > 0)) {
 		unsigned int args_repeats = x_pixels * y_pixels;
-		// RASET/CASET=5, 1 for cmd, 2 for start, 2 for end, 10 total
-		// 11th byte is RAMWR
-		CHECK_CALL(check_repeated_tx_data(11, args_repeats - 1, expected_data, total_tx_bytes));
+		CHECK_CALL(check_repeated_tx_data(ramwr_cmd_index + 1, args_repeats - 1
+		          , expected_data, total_tx_bytes));
 	}
 	PASS();
 }
