@@ -422,3 +422,43 @@ void st7789_fill_region(struct St7789Internals* st7789_driver
 	// N arg commands are terminated once another command is sent
 	st7789_send_command(st7789_driver, spi_tx_reg, NOP);
 }
+
+void st7789_render_font_basic(struct St7789Internals* st7789_driver
+                             , volatile uint32_t* spi_tx_reg
+                             , const unsigned char* font
+                             , char character
+                             , struct RegionInput region
+                             , struct RawRgbInput rgb_foreground
+                             , struct RawRgbInput rgb_background
+                             , enum BitsPerPixel bpp)
+{
+	// Assume font is 5x7 for now
+	// glcdfonts array is stored column wise, where MSB = bottom, LSB = top
+	region.x.end = region.x.start + 5;
+	region.y.end = region.y.start + 7;
+	st7789_set_region(st7789_driver, spi_tx_reg, region);
+
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_background, bpp);
+	uint8_t* args = &rgb_format.rgb888.bytes[0];
+	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
+
+	unsigned int font_offset = character * 5;
+	unsigned int x_offset = 0;
+	unsigned int y_mask = 0;
+
+	st7789_send_command(st7789_driver, spi_tx_reg, RAMWR);
+	for (int y = region.y.start; y < (int) region.y.end; ++y) {
+		for (int x = region.x.start; x < (int) region.x.end; ++x) {
+			x_offset = x - region.x.start;
+			y_mask = 1 << (y - region.y.start);
+			if (font[font_offset + x_offset] & y_mask) {
+				rgb_format = rgb_to_st7789_formatter(rgb_background, bpp);
+			} else {
+				rgb_format = rgb_to_st7789_formatter(rgb_foreground, bpp);
+			}
+			st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
+		}
+	}
+	// N arg commands are terminated once another command is sent
+	st7789_send_command(st7789_driver, spi_tx_reg, NOP);
+}

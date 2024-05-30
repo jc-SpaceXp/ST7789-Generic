@@ -1,11 +1,16 @@
 #include <stdint.h>
 
+// Temp for now
+#define FFF_ARG_HISTORY_LEN 100
+#define FFF_CALL_HISTORY_LEN 100
+
 #include "greatest.h"
 #include "fff.h"
 #include "st7789_suite.h"
 
 #include "st7789.h"
 #include "st7789_private.h"
+#include "st7789_fonts.h"
 
 DEFINE_FFF_GLOBALS;
 FAKE_VOID_FUNC(assert_spi_pin, uint32_t*, unsigned int);
@@ -70,6 +75,18 @@ struct LoopTestSt7789FillColour {
 struct LoopTestSt7789FillRegion {
 	struct RegionInput region;
 	struct RawRgbInput rgb;
+	enum BitsPerPixel bpp;
+};
+
+struct LoopTestSt7789Fonts {
+	char character;
+	struct RegionInput region;
+	struct FontPixels {
+		unsigned int total_x;
+		unsigned int total_y;
+	} pixels;
+	struct RawRgbInput foreground;
+	struct RawRgbInput background;
 	enum BitsPerPixel bpp;
 };
 
@@ -1013,6 +1030,107 @@ void loop_test_st7789_fill_region(void)
 }
 
 
+TEST font_basic(void)
+{
+	unsigned int x_pixels = 5;
+	unsigned int y_pixels = 7;
+
+	const struct LoopTestSt7789Fonts test_font = {
+		'A', {{0, 10}, {0, 10}}, {x_pixels, y_pixels}, {21, 21, 21}, {90, 90, 90}, Pixel16
+	};
+
+	unsigned int total_pixels = test_font.pixels.total_x * test_font.pixels.total_y;
+
+	union RgbInputFormat test_rgb_fg = rgb_to_st7789_formatter(test_font.foreground
+	                                                          , test_font.bpp);
+	union RgbInputFormat test_rgb_bg = rgb_to_st7789_formatter(test_font.background
+	                                                          , test_font.bpp);
+	// A:
+	// FFBFF
+	// FBFBF
+	// BFFFB
+	// BFFFB
+	// BBBBB
+	// BFFFB
+	// BFFFB
+	uint8_t expected_data[5 * 7 * 2] = {
+		// Row 1
+		test_rgb_fg.rgb666.bytes[0] ,test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		// Row 2
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		// Row 3
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		// Row 4
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		// Row 5
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		// Row 6
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		// Row 7
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
+		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+	};
+
+	st7789_render_font_basic(&some_st7789, &some_spi_data_reg, glcdfont
+	                        , test_font.character
+	                        , test_font.region
+	                        , test_font.foreground
+	                        , test_font.background
+	                        , test_font.bpp);
+
+	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
+	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
+	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
+	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	int ramwr_cmd_index = get_first_command_id_index(RAMWR);
+	ASSERTm("RASET not called?", raset_cmd_index != -5);
+	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	ASSERTm("RAMWR not called?", ramwr_cmd_index != -5);
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_font.region.y.start, Start));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_font.region.x.start, Start));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_font.region.y.start + 7 - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_font.region.x.start + 5 - 1, End));
+	CHECK_CALL(tx_byte_was_sent(RAMWR, true));
+	CHECK_CALL(tx_byte_was_sent(RAMWRC, false)); // Must be RAMWR, RAWRC doesn't start @ raset/caset args
+	ASSERT_EQ_FMT(325, 'A' * 5, "%u"); // Sanity check
+	ASSERT_EQ_FMT(0x7C, glcdfont['A' * 5], "%X"); // Sanity check
+	ASSERT_MEM_EQ(expected_data
+	             , &trigger_spi_byte_transfer_fake.arg1_history[ramwr_cmd_index + 1]
+	             , total_pixels);
+	PASS();
+}
+
+
+
 SUITE(st7789_driver)
 {
 	GREATEST_SET_SETUP_CB(setup_st7789_tests, NULL);
@@ -1036,6 +1154,7 @@ SUITE(st7789_driver)
 	loop_test_st7789_fill_screen();
 	loop_test_st7789_set_region();
 	loop_test_st7789_fill_region();
+	RUN_TEST(font_basic);
 }
 
 SUITE(st7789_driver_modes_transitions)

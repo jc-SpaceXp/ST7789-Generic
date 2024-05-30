@@ -152,4 +152,13 @@ void st7789_fill_region(struct St7789Internals* st7789_driver
                        , struct RawRgbInput rgb
                        , enum BitsPerPixel bpp);
 
+void st7789_render_font_basic(struct St7789Internals* st7789_driver
+                             , volatile uint32_t* spi_tx_reg
+                             , const unsigned char* font
+                             , char character
+                             , struct RegionInput region
+                             , struct RawRgbInput rgb_foreground
+                             , struct RawRgbInput rgb_background
+                             , enum BitsPerPixel bpp);
+
 #endif /* ST7789_H */
