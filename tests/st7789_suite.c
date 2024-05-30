@@ -416,7 +416,7 @@ TEST test_st7789_init_sequence(const struct LoopTestSt7789Init* st7789_init)
 	CHECK_CALL(tx_byte_was_sent(SLPOUT, true));
 	CHECK_CALL(tx_byte_was_sent(DISPON, true));
 	for (int i = 0; i < 5; ++i) { // tx struct array size is 5
-		// INVON, COLMOD, CASET, RASET, RAMWRC
+		// INVON, COLMOD, CASET, RASET, RAMWR
 		CHECK_CALL(tx_byte_was_sent(st7789_init->tx[i].tx_byte, st7789_init->tx[i].tx_expected));
 	}
 	PASS();
@@ -540,31 +540,31 @@ void loop_test_all_init_possibilities(void)
 	struct RawRgbInput rgb = { 1, 2, 3 };
 	const struct LoopTestSt7789Init st7789_init[9] = {
 		{ {InvertOff, IgnoreRegion, rgb, Pixel18}
-		  , { {INVON, false}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+		  , { {INVON, false}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWR, false} } }
 
 		, { {InvertOn, IgnoreRegion, rgb, Pixel18}
-		  , { {INVON, true}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+		  , { {INVON, true}, {COLMOD, false}, {CASET, false}, {RASET, false}, {RAMWR, false} } }
 
 		, { {InvertOff, FillRegion, rgb, Pixel18}
-		  , { {INVON, false}, {COLMOD, false}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+		  , { {INVON, false}, {COLMOD, false}, {CASET, true}, {RASET, true}, {RAMWR, true} } }
 
 		, { {InvertOn, FillRegion, rgb, Pixel18}
-		  , { {INVON, true}, {COLMOD, false}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+		  , { {INVON, true}, {COLMOD, false}, {CASET, true}, {RASET, true}, {RAMWR, true} } }
 
 		, { {InvertOff, IgnoreRegion, rgb, Pixel16}
-		  , { {INVON, false}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+		  , { {INVON, false}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWR, false} } }
 
 		, { {InvertOn, IgnoreRegion, rgb, Pixel16M}
-		  , { {INVON, true}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+		  , { {INVON, true}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWR, false} } }
 
 		, { {InvertOff, FillRegion, rgb, Pixel12}
-		  , { {INVON, false}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+		  , { {INVON, false}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWR, true} } }
 
 		, { {InvertOn, FillRegion, rgb, Pixel12}
-		  , { {INVON, true}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWRC, true} } }
+		  , { {INVON, true}, {COLMOD, true}, {CASET, true}, {RASET, true}, {RAMWR, true} } }
 
 		, { {InvertOn, IgnoreRegion, rgb, Pixel24}
-		  , { {INVON, true}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWRC, false} } }
+		  , { {INVON, true}, {COLMOD, true}, {CASET, false}, {RASET, false}, {RAMWR, false} } }
 	};
 
 	for (int i = 0; i < 9; ++i) {
@@ -872,16 +872,16 @@ TEST test_st7789_fill_screen(const struct LoopTestSt7789FillColour* st7789_fill)
 	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
 	int raset_cmd_index = get_first_command_id_index(RASET);
 	int caset_cmd_index = get_first_command_id_index(CASET);
-	int ramwrc_cmd_index = get_first_command_id_index(RAMWRC);
+	int ramwr_cmd_index = get_first_command_id_index(RAMWR);
 	ASSERTm("RASET not called?", raset_cmd_index != -5);
 	ASSERTm("CASET not called?", caset_cmd_index != -5);
-	ASSERTm("RAMWRC must be called after RASET", ramwrc_cmd_index > raset_cmd_index);
-	ASSERTm("RAMWRC must be called after CASET", ramwrc_cmd_index > caset_cmd_index);
+	ASSERTm("RAMWRC must be called after RASET", ramwr_cmd_index > raset_cmd_index);
+	ASSERTm("RAMWRC must be called after CASET", ramwr_cmd_index > caset_cmd_index);
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, 0, Start));
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, y_pixels - 1, End));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, x_pixels - 1, End));
-	CHECK_CALL(check_repeated_tx_data(ramwrc_cmd_index + 1
+	CHECK_CALL(check_repeated_tx_data(ramwr_cmd_index + 1
 	                                 , total_pixels - 1, expected_data, total_tx_bytes));
 	PASS();
 }

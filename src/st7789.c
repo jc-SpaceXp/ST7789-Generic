@@ -384,7 +384,7 @@ void st7789_fill_screen(struct St7789Internals* st7789_driver
 	uint8_t* args = &rgb_format.rgb888.bytes[0];
 	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
 
-	st7789_send_command(st7789_driver, spi_tx_reg, RAMWRC);
+	st7789_send_command(st7789_driver, spi_tx_reg, RAMWR);
 	for (int y = 0; y < (int) y_end; ++y) {
 		for (int x = 0; x < (int) x_end; ++x) {
 			st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
