@@ -58,6 +58,17 @@ union RgbInputFormat {
 	} rgb444;
 };
 
+struct FontArguments {
+	const unsigned char* font;
+	char output_char;
+	struct RawRgbInput rgb_foreground;
+	struct RawRgbInput rgb_background;
+	struct {
+		unsigned int x_start;
+		unsigned int y_start;
+	};
+};
+
 struct St7789SpiPin;
 struct St7789Modes;
 struct St7789Internals;
@@ -154,11 +165,7 @@ void st7789_fill_region(struct St7789Internals* st7789_driver
 
 void st7789_render_font_basic(struct St7789Internals* st7789_driver
                              , volatile uint32_t* spi_tx_reg
-                             , const unsigned char* font
-                             , char character
-                             , struct RegionInput region
-                             , struct RawRgbInput rgb_foreground
-                             , struct RawRgbInput rgb_background
+                             , const struct FontArguments* font
                              , enum BitsPerPixel bpp);
 
 #endif /* ST7789_H */

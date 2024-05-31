@@ -425,24 +425,20 @@ void st7789_fill_region(struct St7789Internals* st7789_driver
 
 void st7789_render_font_basic(struct St7789Internals* st7789_driver
                              , volatile uint32_t* spi_tx_reg
-                             , const unsigned char* font
-                             , char character
-                             , struct RegionInput region
-                             , struct RawRgbInput rgb_foreground
-                             , struct RawRgbInput rgb_background
+                             , const struct FontArguments* font
                              , enum BitsPerPixel bpp)
 {
 	// Assume font is 5x7 for now
 	// glcdfonts array is stored column wise, where MSB = bottom, LSB = top
-	region.x.end = region.x.start + 5;
-	region.y.end = region.y.start + 7;
+	struct RegionInput region = { {font->x_start, font->x_start + 5}
+	                            , {font->y_start, font->y_start + 7} };
 	st7789_set_region(st7789_driver, spi_tx_reg, region);
 
-	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(rgb_background, bpp);
+	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(font->rgb_background, bpp);
 	uint8_t* args = &rgb_format.rgb888.bytes[0];
 	unsigned int total_bytes = rgb_format.rgb888.total_bytes;
 
-	unsigned int font_offset = character * 5;
+	unsigned int font_offset = font->output_char * 5;
 	unsigned int x_offset = 0;
 	unsigned int y_mask = 0;
 
@@ -451,10 +447,10 @@ void st7789_render_font_basic(struct St7789Internals* st7789_driver
 		for (int x = region.x.start; x < (int) region.x.end; ++x) {
 			x_offset = x - region.x.start;
 			y_mask = 1 << (y - region.y.start);
-			if (font[font_offset + x_offset] & y_mask) {
-				rgb_format = rgb_to_st7789_formatter(rgb_background, bpp);
+			if (font->font[font_offset + x_offset] & y_mask) {
+				rgb_format = rgb_to_st7789_formatter(font->rgb_background, bpp);
 			} else {
-				rgb_format = rgb_to_st7789_formatter(rgb_foreground, bpp);
+				rgb_format = rgb_to_st7789_formatter(font->rgb_foreground, bpp);
 			}
 			st7789_send_data_via_array(st7789_driver, spi_tx_reg, args, total_bytes, TxContinue);
 		}

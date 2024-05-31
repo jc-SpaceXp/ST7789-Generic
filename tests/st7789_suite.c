@@ -1039,6 +1039,11 @@ TEST font_basic(void)
 		'A', {{0, 10}, {0, 10}}, {x_pixels, y_pixels}, {21, 21, 21}, {90, 90, 90}, Pixel16
 	};
 
+	const struct FontArguments font_input = {
+		glcdfont, test_font.character, test_font.foreground, test_font.background
+		, { test_font.region.x.start, test_font.region.y.start }
+	};
+
 	unsigned int total_pixels = test_font.pixels.total_x * test_font.pixels.total_y;
 
 	union RgbInputFormat test_rgb_fg = rgb_to_st7789_formatter(test_font.foreground
@@ -1098,11 +1103,8 @@ TEST font_basic(void)
 		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
 	};
 
-	st7789_render_font_basic(&some_st7789, &some_spi_data_reg, glcdfont
-	                        , test_font.character
-	                        , test_font.region
-	                        , test_font.foreground
-	                        , test_font.background
+	st7789_render_font_basic(&some_st7789, &some_spi_data_reg
+	                        , &font_input
 	                        , test_font.bpp);
 
 	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
