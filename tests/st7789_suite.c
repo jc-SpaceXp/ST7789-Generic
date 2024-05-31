@@ -91,6 +91,7 @@ struct LoopTestSt7789Fonts {
 };
 
 enum RasetCasetStartOrEnd { Start, End };
+enum TxForegroundOrBackground { Foreg, Backg };
 
 
 static void init_st7789_modes_from_struct(struct St7789Modes* st7789_dest
@@ -1059,50 +1060,25 @@ TEST font_basic(void)
 	// BBBBB
 	// BFFFB
 	// BFFFB
-	uint8_t expected_data[5 * 7 * 2] = {
-		// Row 1
-		test_rgb_fg.rgb666.bytes[0] ,test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 2
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 4
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 5
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 6
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 7
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+	enum TxForegroundOrBackground tx_fg_bg[5*7] = {
+		Foreg, Foreg, Backg, Foreg, Foreg
+		, Foreg, Backg, Foreg, Backg, Foreg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Backg, Backg, Backg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
 	};
+	uint8_t expected_data[5 * 7 * 2] = { 0 };
+
+	for (int i = 0; i < (5 * 7); ++i) {
+		expected_data[i * 2] = test_rgb_fg.rgb666.bytes[0];
+		expected_data[(i * 2) + 1] = test_rgb_fg.rgb666.bytes[1];
+		if (tx_fg_bg[i] == Backg) {
+			expected_data[i * 2] = test_rgb_bg.rgb666.bytes[0];
+			expected_data[(i * 2) + 1] = test_rgb_bg.rgb666.bytes[1];
+		}
+	}
 
 	st7789_putchar(&some_st7789, &some_spi_data_reg
 	              , &font_input
@@ -1175,344 +1151,47 @@ TEST font_basic_scaled_by_3(void)
 	// BBBFFFFFFFFFBBB (7)
 	// BBBFFFFFFFFFBBB (7)
 	// BBBFFFFFFFFFBBB (7)
-	uint8_t expected_data[15 * 35 * 2] = { // 5x7(scaled) * rgb_bytes
-		// Row 1 * 3
-		test_rgb_fg.rgb666.bytes[0] ,test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 1
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 1
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 2 * 3
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 2
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 2
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		// Row 3 * 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 4 * 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 4
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 4
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 5 * 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 5
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 5
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 6 * 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 6
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 6
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 7 * 3
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 7
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		// Row 7
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_fg.rgb666.bytes[0], test_rgb_fg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
-		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
+	enum TxForegroundOrBackground tx_fg_bg[5*7*3*3] = {
+		// row 1
+		Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg
+		, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg
+		, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg
+		// row 2
+		, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg
+		, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg
+		, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg
+		// row 3
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		// row 4
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		// row 5
+		, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg, Backg
+		// row 6
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		// row 7
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
+		, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg
 	};
+	uint8_t expected_data[15 * 35 * 2] = { 0 };
+
+	for (int i = 0; i < (int) (5 * 7 * scale * scale); ++i) {
+		expected_data[i * 2] = test_rgb_fg.rgb666.bytes[0];
+		expected_data[(i * 2) + 1] = test_rgb_fg.rgb666.bytes[1];
+		if (tx_fg_bg[i] == Backg) {
+			expected_data[i * 2] = test_rgb_bg.rgb666.bytes[0];
+			expected_data[(i * 2) + 1] = test_rgb_bg.rgb666.bytes[1];
+		}
+	}
+
 
 	st7789_putchar(&some_st7789, &some_spi_data_reg
 	              , &font_input
