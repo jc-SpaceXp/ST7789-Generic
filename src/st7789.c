@@ -430,8 +430,8 @@ void st7789_putchar(struct St7789Internals* st7789_driver
 {
 	// Assume font is 5x7 for now
 	// glcdfonts array is stored column wise, where MSB = bottom, LSB = top
-	struct RegionInput region = { {font->x_start, font->x_start + 5}
-	                            , {font->y_start, font->y_start + 7} };
+	struct RegionInput region = { {font->x_start, font->x_start + (5 * font->scale)}
+	                            , {font->y_start, font->y_start + (7 * font->scale)} };
 	st7789_set_region(st7789_driver, spi_tx_reg, region);
 
 	union RgbInputFormat rgb_format = rgb_to_st7789_formatter(font->rgb_background, bpp);
@@ -445,8 +445,8 @@ void st7789_putchar(struct St7789Internals* st7789_driver
 	st7789_send_command(st7789_driver, spi_tx_reg, RAMWR);
 	for (int y = region.y.start; y < (int) region.y.end; ++y) {
 		for (int x = region.x.start; x < (int) region.x.end; ++x) {
-			x_offset = x - region.x.start;
-			y_mask = 1 << (y - region.y.start);
+			x_offset = (x - region.x.start) / font->scale;
+			y_mask = 1 << ((y - region.y.start) / font->scale);
 			if (font->bitmap[font_offset + x_offset] & y_mask) {
 				rgb_format = rgb_to_st7789_formatter(font->rgb_background, bpp);
 			} else {
