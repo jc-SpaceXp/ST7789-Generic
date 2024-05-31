@@ -1060,7 +1060,7 @@ TEST test_putchar(void)
 	// BBBBB
 	// BFFFB
 	// BFFFB
-	enum TxForegroundOrBackground tx_fg_bg[5*7] = {
+	enum TxForegroundOrBackground tx_fg_bg[5 * 7] = {
 		Foreg, Foreg, Backg, Foreg, Foreg
 		, Foreg, Backg, Foreg, Backg, Foreg
 		, Backg, Foreg, Foreg, Foreg, Backg
@@ -1151,7 +1151,7 @@ TEST putchar_scaled_by_3(void)
 	// BBBFFFFFFFFFBBB (7)
 	// BBBFFFFFFFFFBBB (7)
 	// BBBFFFFFFFFFBBB (7)
-	enum TxForegroundOrBackground tx_fg_bg[5*7*3*3] = {
+	enum TxForegroundOrBackground tx_fg_bg[5 * 7 * 3 * 3] = {
 		// row 1
 		Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg
 		, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg, Backg, Backg, Backg, Foreg, Foreg, Foreg, Foreg, Foreg, Foreg
@@ -1209,8 +1209,12 @@ TEST putchar_scaled_by_3(void)
 	ASSERTm("RAMWR not called?", ramwr_cmd_index != -5);
 	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_font.region.y.start, Start));
 	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_font.region.x.start, Start));
-	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_font.region.y.start + (7*scale) - 1, End));
-	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_font.region.x.start + (5*scale) - 1, End));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index
+	                                 , test_font.region.y.start + (7 * scale) - 1
+	                                 , End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index
+	                                 , test_font.region.x.start + (5 * scale) - 1
+	                                 , End));
 	CHECK_CALL(tx_byte_was_sent(RAMWR, true));
 	CHECK_CALL(tx_byte_was_sent(RAMWRC, false)); // Must be RAMWR, RAWRC doesn't start @ raset/caset args
 	ASSERT_EQ_FMT(325, 'A' * 5, "%u"); // Sanity check
