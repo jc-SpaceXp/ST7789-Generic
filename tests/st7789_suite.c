@@ -1031,7 +1031,7 @@ void loop_test_st7789_fill_region(void)
 }
 
 
-TEST font_basic(void)
+TEST test_putchar(void)
 {
 	unsigned int scale = 1;
 	unsigned int x_pixels = 5;
@@ -1108,7 +1108,7 @@ TEST font_basic(void)
 	PASS();
 }
 
-TEST font_basic_scaled_by_3(void)
+TEST putchar_scaled_by_3(void)
 {
 	unsigned int scale = 3;
 	unsigned int x_pixels = 5 * 3;
@@ -1245,8 +1245,8 @@ SUITE(st7789_driver)
 	loop_test_st7789_fill_screen();
 	loop_test_st7789_set_region();
 	loop_test_st7789_fill_region();
-	RUN_TEST(font_basic);
-	RUN_TEST(font_basic_scaled_by_3);
+	RUN_TEST(test_putchar);
+	RUN_TEST(putchar_scaled_by_3);
 }
 
 SUITE(st7789_driver_modes_transitions)
