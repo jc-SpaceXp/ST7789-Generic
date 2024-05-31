@@ -1103,9 +1103,9 @@ TEST font_basic(void)
 		, test_rgb_bg.rgb666.bytes[0], test_rgb_bg.rgb666.bytes[1]
 	};
 
-	st7789_render_font_basic(&some_st7789, &some_spi_data_reg
-	                        , &font_input
-	                        , test_font.bpp);
+	st7789_putchar(&some_st7789, &some_spi_data_reg
+	              , &font_input
+	              , test_font.bpp);
 
 	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
 	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);

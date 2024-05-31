@@ -423,10 +423,10 @@ void st7789_fill_region(struct St7789Internals* st7789_driver
 	st7789_send_command(st7789_driver, spi_tx_reg, NOP);
 }
 
-void st7789_render_font_basic(struct St7789Internals* st7789_driver
-                             , volatile uint32_t* spi_tx_reg
-                             , const struct FontArguments* font
-                             , enum BitsPerPixel bpp)
+void st7789_putchar(struct St7789Internals* st7789_driver
+                   , volatile uint32_t* spi_tx_reg
+                   , const struct FontArguments* font
+                   , enum BitsPerPixel bpp)
 {
 	// Assume font is 5x7 for now
 	// glcdfonts array is stored column wise, where MSB = bottom, LSB = top
