@@ -447,7 +447,7 @@ void st7789_putchar(struct St7789Internals* st7789_driver
 		for (int x = region.x.start; x < (int) region.x.end; ++x) {
 			x_offset = x - region.x.start;
 			y_mask = 1 << (y - region.y.start);
-			if (font->font[font_offset + x_offset] & y_mask) {
+			if (font->bitmap[font_offset + x_offset] & y_mask) {
 				rgb_format = rgb_to_st7789_formatter(font->rgb_background, bpp);
 			} else {
 				rgb_format = rgb_to_st7789_formatter(font->rgb_foreground, bpp);

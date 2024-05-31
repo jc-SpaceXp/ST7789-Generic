@@ -59,7 +59,7 @@ union RgbInputFormat {
 };
 
 struct FontArguments {
-	const unsigned char* font;
+	const unsigned char* bitmap;
 	char output_char;
 	struct RawRgbInput rgb_foreground;
 	struct RawRgbInput rgb_background;
