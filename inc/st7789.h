@@ -168,5 +168,10 @@ void st7789_putchar(struct St7789Internals* st7789_driver
                    , volatile uint32_t* spi_tx_reg
                    , const struct FontArguments* font
                    , enum BitsPerPixel bpp);
+void st7789_print(struct St7789Internals* st7789_driver
+                 , volatile uint32_t* spi_tx_reg
+                 , const char* print_string
+                 , struct FontArguments* font
+                 , enum BitsPerPixel bpp);
 
 #endif /* ST7789_H */

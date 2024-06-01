@@ -338,6 +338,23 @@ static int get_first_command_id_index(uint8_t command_id)
 	return first_cmd_index;
 }
 
+static int get_nth_command_id_index(uint8_t command_id, unsigned int skip_count)
+{
+	int nth_cmd_index = -5;
+	int find_counter = 0;
+	for (int i = 0; i < (int) trigger_spi_byte_transfer_fake.call_count; ++i) {
+		if (trigger_spi_byte_transfer_fake.arg1_history[i] == command_id) {
+			++find_counter;
+			if (find_counter == (int) skip_count) {
+				nth_cmd_index = i;
+				break;
+			}
+		}
+	}
+
+	return nth_cmd_index;
+}
+
 
 TEST snprintf_return_val(bool sn_error)
 {
@@ -1225,6 +1242,119 @@ TEST putchar_scaled_by_3(void)
 	PASS();
 }
 
+TEST test_print_string(void)
+{
+	unsigned int scale = 1;
+	unsigned int x_pixels = 5; // should be *2 but we separate out test array into 2 chunks
+	unsigned int y_pixels = 7;
+
+	const struct LoopTestSt7789Fonts test_font = {
+		'A', {{0, 10}, {0, 10}}, {x_pixels, y_pixels}, {21, 21, 21}, {90, 90, 90}, Pixel16
+	};
+
+	struct FontArguments font_input = {
+		glcdfont, test_font.character, scale, test_font.foreground, test_font.background
+		, { test_font.region.x.start, test_font.region.y.start }
+	};
+
+	unsigned int total_pixels = test_font.pixels.total_x * test_font.pixels.total_y;
+
+	union RgbInputFormat test_rgb_fg = rgb_to_st7789_formatter(test_font.foreground
+	                                                          , test_font.bpp);
+	union RgbInputFormat test_rgb_bg = rgb_to_st7789_formatter(test_font.background
+	                                                          , test_font.bpp);
+	// A:        D
+	// FFBFF     BBBBF
+	// FBFBF     BFFFB
+	// BFFFB     BFFFB
+	// BFFFB     BFFFB
+	// BBBBB     BFFFB
+	// BFFFB     BFFFB
+	// BFFFB     BBBBF
+	enum TxForegroundOrBackground tx_fg_bg_char1[5 * 7] = {
+		// A
+		Foreg, Foreg, Backg, Foreg, Foreg
+		, Foreg, Backg, Foreg, Backg, Foreg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Backg, Backg, Backg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+	};
+	enum TxForegroundOrBackground tx_fg_bg_char2[5 * 7] = {
+		// D
+		Backg, Backg, Backg, Backg, Foreg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Foreg, Foreg, Foreg, Backg
+		, Backg, Backg, Backg, Backg, Foreg
+	};
+	uint8_t expected_data_char1[5 * 7 * 2] = { 0 };
+	uint8_t expected_data_char2[5 * 7 * 2] = { 0 };
+
+	for (int i = 0; i < (5 * 7); ++i) {
+		expected_data_char1[i * 2] = test_rgb_fg.rgb666.bytes[0];
+		expected_data_char1[(i * 2) + 1] = test_rgb_fg.rgb666.bytes[1];
+		if (tx_fg_bg_char1[i] == Backg) {
+			expected_data_char1[i * 2] = test_rgb_bg.rgb666.bytes[0];
+			expected_data_char1[(i * 2) + 1] = test_rgb_bg.rgb666.bytes[1];
+		}
+		expected_data_char2[i * 2] = test_rgb_fg.rgb666.bytes[0];
+		expected_data_char2[(i * 2) + 1] = test_rgb_fg.rgb666.bytes[1];
+		if (tx_fg_bg_char2[i] == Backg) {
+			expected_data_char2[i * 2] = test_rgb_bg.rgb666.bytes[0];
+			expected_data_char2[(i * 2) + 1] = test_rgb_bg.rgb666.bytes[1];
+		}
+	}
+
+	const char test_print[5] = "AD";
+	st7789_print(&some_st7789, &some_spi_data_reg
+	            , test_print
+	            , &font_input
+	            , test_font.bpp);
+
+	ASSERTm("Exceeded max calls to faked function, cannot loop through complete history"
+	 , trigger_spi_byte_transfer_fake.call_count < FFF_CALL_HISTORY_LEN);
+	ASSERTm("Cannot loop through complete history, some arguments haven't been stored"
+	 , trigger_spi_byte_transfer_fake.arg_histories_dropped == 0);
+	int raset_cmd_index = get_first_command_id_index(RASET);
+	int caset_cmd_index = get_first_command_id_index(CASET);
+	int ramwr_cmd_index = get_first_command_id_index(RAMWR);
+	int raset2_cmd_index = get_nth_command_id_index(RASET, 2);
+	int caset2_cmd_index = get_nth_command_id_index(CASET, 2);
+	int ramwr2_cmd_index = get_nth_command_id_index(RAMWR, 2);
+	ASSERTm("RASET not called?", raset_cmd_index != -5);
+	ASSERTm("RASET not called?", raset2_cmd_index != -5);
+	ASSERTm("CASET not called?", caset_cmd_index != -5);
+	ASSERTm("CASET not called?", caset2_cmd_index != -5);
+	ASSERTm("RAMWR not called?", ramwr_cmd_index != -5);
+	ASSERTm("RAMWR not called?", ramwr2_cmd_index != -5);
+	ASSERTm("RASET not called twice?", raset_cmd_index != raset2_cmd_index);
+	ASSERTm("CASET not called twice?", caset_cmd_index != caset2_cmd_index);
+	ASSERTm("RAMWR not called twice?", ramwr_cmd_index != ramwr2_cmd_index);
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_font.region.y.start, Start));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_font.region.x.start, Start));
+	CHECK_CALL(check_raset_caset_args(raset_cmd_index, test_font.region.y.start + 7 - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset_cmd_index, test_font.region.x.start + 5 - 1, End));
+	// +X +Y as we subract 1 from end pos, e.g. XS = 0, XE = 4
+	// therefore adjacent pixel is XS = 5 (or +X)
+	CHECK_CALL(check_raset_caset_args(raset2_cmd_index, test_font.region.y.start + 7, Start));
+	CHECK_CALL(check_raset_caset_args(caset2_cmd_index, test_font.region.x.start + 5, Start));
+	CHECK_CALL(check_raset_caset_args(raset2_cmd_index, test_font.region.y.start + 14 - 1, End));
+	CHECK_CALL(check_raset_caset_args(caset2_cmd_index, test_font.region.x.start + 10 - 1, End));
+	CHECK_CALL(tx_byte_was_sent(RAMWR, true));
+	CHECK_CALL(tx_byte_was_sent(RAMWRC, false)); // Must be RAMWR, RAWRC doesn't start @ raset/caset args
+	ASSERT_MEM_EQ(expected_data_char1
+	             , &trigger_spi_byte_transfer_fake.arg1_history[ramwr_cmd_index + 1]
+	             , total_pixels);
+	ASSERT_MEM_EQ(expected_data_char2
+	             , &trigger_spi_byte_transfer_fake.arg1_history[ramwr2_cmd_index + 1]
+	             , total_pixels);
+	PASS();
+}
+
 
 SUITE(st7789_driver)
 {
@@ -1251,6 +1381,7 @@ SUITE(st7789_driver)
 	loop_test_st7789_fill_region();
 	RUN_TEST(test_putchar);
 	RUN_TEST(putchar_scaled_by_3);
+	RUN_TEST(test_print_string);
 }
 
 SUITE(st7789_driver_modes_transitions)

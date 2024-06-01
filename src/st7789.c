@@ -458,3 +458,26 @@ void st7789_putchar(struct St7789Internals* st7789_driver
 	// N arg commands are terminated once another command is sent
 	st7789_send_command(st7789_driver, spi_tx_reg, NOP);
 }
+
+void st7789_print(struct St7789Internals* st7789_driver
+                 , volatile uint32_t* spi_tx_reg
+                 , const char* print_string
+                 , struct FontArguments* font
+                 , enum BitsPerPixel bpp)
+{
+	// From FreeBSD, avoids including <stdio>
+	size_t strlen(const char* str) {
+		const char* s;
+		for (s = str; *s; ++s);
+		return (s-str);
+	}
+
+	size_t length = strlen(print_string);
+	for (int i = 0; i < (int) length; ++i) {
+		font->output_char = *(print_string + i);
+		st7789_putchar(st7789_driver, spi_tx_reg, font, bpp);
+		// make sure characters aren't overlapping
+		font->x_start += 5;
+		font->y_start += 7;
+	}
+}
